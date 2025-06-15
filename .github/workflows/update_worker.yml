@@ -1,0 +1,303 @@
+name: Auto Update Worker
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 1 * * *" # 每天凌晨1点自动运行
+  workflow_dispatch:     # 支持手动运行
+    inputs:
+      release-type:
+        description: '请选择更新类型'
+        required: true
+        default: '正式版'
+        type: choice
+        options:
+        - '正式版'
+        - '测试版'
+      force-update:
+        description: '是否强制更新（忽略版本比较）'
+        required: false
+        default: '否'
+        type: choice
+        options:
+        - '是'
+        - '否'
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 初始化仓库
+        uses: actions/checkout@v4
+
+      - name: 创建/更新README.md
+        run: |
+          cat > README.md << 'EOF'
+          # Worker 自动更新系统
+
+          ## 🚀 核心功能
+          - **双版本支持**：正式版（稳定）与测试版（尝鲜）
+          - **两种更新模式**：
+            - 定时自动更新（每日凌晨1点）
+            - 手动触发更新（随时可执行）
+          - **智能版本控制**：
+            - 自动跳过低版本更新
+            - 测试版模式下优先选择更高版本的正式版
+
+          ## 🛠️ 使用指南
+
+          ### 手动更新操作
+          1. 进入项目的 **Actions** 页面
+          2. 选择 **Auto Update Worker** 工作流
+          3. 点击 **Run workflow** 按钮
+          4. 参数设置：
+             - **更新类型**：
+               - `正式版`：稳定生产环境使用（默认）
+               - `测试版`：体验最新功能
+             - **强制更新**：
+               - `是`：忽略版本检查直接覆盖
+               - `否`：仅更新到更高版本（推荐）
+
+          ### 自动更新规则
+          | 模式 | 检查条件 | 强制更新行为 |
+          |------|----------|--------------|
+          | 正式版 | 仅正式版 > 当前版本 | 安装最新正式版 |
+          | 测试版 | 正式版 > 测试版 > 当前版本 | 安装最新测试版 |
+
+          ## ⚡ 高级功能
+          ### 版本锁定机制
+          1. 修改 `自动更新类型.txt` 内容可永久切换更新类型
+          2. `version.txt` 记录当前版本信息和更新时间
+          3. 受保护文件（更新时不会被删除）：
+             - `README.md`
+             - `自动更新类型.txt`
+             - `version.txt`
+
+          ### 强制更新场景
+          - 降级到旧版本
+          - 重新安装当前版本
+          - 跳过版本验证流程
+
+          ## 📚 常见问题
+          <details>
+          <summary>Q: 如何查看当前版本？</summary>
+          检查项目根目录下的 <code>version.txt</code> 文件，包含：
+          - 当前版本号
+          - 版本类型
+          - 更新时间
+          </details>
+
+          <details>
+          <summary>Q: 为什么自动更新没有执行？</summary>
+          可能原因：
+          1. 当前已是最新版本
+          2. 网络请求失败
+          3. 定时任务未到执行时间
+          4. 目标版本没有 worker.zip 资源
+          </details>
+
+          <details>
+          <summary>Q: 测试版会更新到正式版吗？</summary>
+          当同时满足：
+          1. 当前为测试版模式
+          2. 存在更高版本的正式版
+          系统将自动升级到正式版
+          </details>
+
+          ## 📜 版本记录规范
+          ```plaintext
+          当前版本: v2.1.0
+          版本类型: 正式版
+          更新时间: 2023-06-15 09:00:00
+          更新方式: 自动更新
+          ```
+          EOF
+          echo "README.md 已更新"
+
+      - name: 检查或创建自动更新类型文件
+        id: check_update_type
+        run: |
+          echo -e "\033[34m[检查自动更新类型文件]\033[0m"
+          if [ ! -f "自动更新类型.txt" ]; then
+            echo "自动更新类型文件不存在，创建新文件"
+            UPDATE_TYPE="${{ github.event.inputs.release-type || '正式版' }}"
+            echo "$UPDATE_TYPE" > "自动更新类型.txt"
+            echo "已创建自动更新类型文件，设置为: $UPDATE_TYPE"
+          else
+            if [ -n "${{ github.event.inputs.release-type }}" ]; then
+              UPDATE_TYPE="${{ github.event.inputs.release-type }}"
+              echo "$UPDATE_TYPE" > "自动更新类型.txt"
+              echo "已更新自动更新类型为: $UPDATE_TYPE"
+            else
+              UPDATE_TYPE=$(cat "自动更新类型.txt")
+              echo "当前自动更新类型: $UPDATE_TYPE"
+            fi
+          fi
+          
+          echo "VERSION_TYPE=$UPDATE_TYPE" >> $GITHUB_ENV
+          [ "$UPDATE_TYPE" = "测试版" ] && echo "IS_PRERELEASE=true" >> $GITHUB_ENV || echo "IS_PRERELEASE=false" >> $GITHUB_ENV
+          [ "${{ github.event.inputs.force-update }}" = "是" ] && echo "FORCE_UPDATE=true" >> $GITHUB_ENV || echo "FORCE_UPDATE=false" >> $GITHUB_ENV
+
+      - name: 获取当前本地版本
+        id: get_local_version
+        run: |
+          echo -e "\033[34m[获取本地版本]\033[0m"
+          if [ -f version.txt ]; then
+            LOCAL_VERSION=$(grep '当前版本' version.txt | awk '{print $2}')
+            LOCAL_TYPE=$(grep '版本类型' version.txt | awk '{print $2}')
+            echo "当前本地版本: $LOCAL_VERSION (类型: $LOCAL_TYPE)"
+          else
+            echo "首次同步，没有本地版本。"
+            LOCAL_VERSION=""
+            LOCAL_TYPE=""
+          fi
+          echo "LOCAL_VERSION=$LOCAL_VERSION" >> $GITHUB_ENV
+          echo "LOCAL_TYPE=$LOCAL_TYPE" >> $GITHUB_ENV
+
+      - name: 获取所有Release信息
+        id: get_releases
+        run: |
+          echo -e "\033[34m[获取所有Release信息]\033[0m"
+          API_URL="https://api.github.com/repos/bia-pain-bache/BPB-Worker-Panel/releases"
+          RESPONSE=$(curl -s "$API_URL")
+          
+          # 获取最新正式版和测试版
+          LATEST_STABLE=$(echo "$RESPONSE" | jq -r '[.[] | select(.prerelease == false)][0]')
+          LATEST_PRERELEASE=$(echo "$RESPONSE" | jq -r '[.[] | select(.prerelease == true)][0]')
+          
+          # 提取版本号
+          STABLE_TAG=$(echo "$LATEST_STABLE" | jq -r '.tag_name')
+          PRERELEASE_TAG=$(echo "$LATEST_PRERELEASE" | jq -r '.tag_name')
+          
+          echo "最新正式版: ${STABLE_TAG:-无}"
+          echo "最新测试版: ${PRERELEASE_TAG:-无}"
+          
+          # 强制更新逻辑
+          if [ "$FORCE_UPDATE" = "true" ]; then
+            echo -e "\033[33m[强制更新模式] 将直接使用选择的更新类型\033[0m"
+            if [ "$VERSION_TYPE" = "正式版" ]; then
+              if [ "$LATEST_STABLE" != "null" ]; then
+                TARGET_RELEASE=$LATEST_STABLE
+                TAG_NAME=$STABLE_TAG
+                echo "强制更新目标版本: 正式版 $TAG_NAME"
+              else
+                echo -e "\033[31m强制更新失败：无可用正式版\033[0m"
+                exit 1
+              fi
+            else
+              if [ "$LATEST_PRERELEASE" != "null" ]; then
+                TARGET_RELEASE=$LATEST_PRERELEASE
+                TAG_NAME=$PRERELEASE_TAG
+                echo "强制更新目标版本: 测试版 $TAG_NAME"
+              else
+                echo -e "\033[31m强制更新失败：无可用测试版\033[0m"
+                exit 1
+              fi
+            fi
+          else
+            # 非强制更新逻辑
+            if [ "$VERSION_TYPE" = "正式版" ]; then
+              if [ "$LATEST_STABLE" != "null" ]; then
+                TARGET_RELEASE=$LATEST_STABLE
+                TAG_NAME=$STABLE_TAG
+                echo "目标版本: 正式版 $TAG_NAME"
+              else
+                echo -e "\033[33m无可用正式版，放弃更新\033[0m"
+                echo "UPDATE_NEEDED=false" >> $GITHUB_ENV
+                exit 0
+              fi
+            else
+              # 测试版模式下，检查正式版是否更高
+              if [ "$LATEST_STABLE" != "null" ] && [ "$LATEST_PRERELEASE" != "null" ]; then
+                if [ "$(printf '%s\n' "$PRERELEASE_TAG" "$STABLE_TAG" | sort -V | head -n1)" = "$PRERELEASE_TAG" ] && \
+                   [ "$PRERELEASE_TAG" != "$STABLE_TAG" ]; then
+                  echo -e "\033[33m[版本比较] 正式版($STABLE_TAG)高于测试版($PRERELEASE_TAG)，优先更新到正式版\033[0m"
+                  TARGET_RELEASE=$LATEST_STABLE
+                  TAG_NAME=$STABLE_TAG
+                  echo "VERSION_TYPE=正式版" >> $GITHUB_ENV
+                  echo "目标版本: 正式版 $TAG_NAME (因版本更高)"
+                else
+                  TARGET_RELEASE=$LATEST_PRERELEASE
+                  TAG_NAME=$PRERELEASE_TAG
+                  echo "目标版本: 测试版 $TAG_NAME"
+                fi
+              elif [ "$LATEST_PRERELEASE" != "null" ]; then
+                TARGET_RELEASE=$LATEST_PRERELEASE
+                TAG_NAME=$PRERELEASE_TAG
+                echo "目标版本: 测试版 $TAG_NAME"
+              else
+                echo -e "\033[33m无可用测试版，放弃更新\033[0m"
+                echo "UPDATE_NEEDED=false" >> $GITHUB_ENV
+                exit 0
+              fi
+            fi
+          fi
+          
+          DOWNLOAD_URL=$(echo "$TARGET_RELEASE" | jq -r '.assets[] | select(.name == "worker.zip") | .browser_download_url')
+
+          if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" = "null" ]; then
+            echo -e "\033[31m未找到 worker.zip，退出！\033[0m"
+            exit 1
+          fi
+
+          echo "最终下载版本: $TAG_NAME (类型: $VERSION_TYPE)"
+          echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> $GITHUB_ENV
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
+
+          # 设置更新标志
+          if [ "$FORCE_UPDATE" = "true" ]; then
+            echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
+          else
+            if [ -n "$LOCAL_VERSION" ]; then
+              if [ "$(printf '%s\n' "$LOCAL_VERSION" "$TAG_NAME" | sort -V | head -n1)" = "$LOCAL_VERSION" ] && \
+                 [ "$LOCAL_VERSION" != "$TAG_NAME" ]; then
+                echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
+                echo -e "\033[33m[版本比较] 当前版本($LOCAL_VERSION)低于目标版本($TAG_NAME)，需要更新\033[0m"
+              else
+                echo "UPDATE_NEEDED=false" >> $GITHUB_ENV
+                echo -e "\033[32m当前版本已是最新或更高版本，无需更新\033[0m"
+              fi
+            else
+              echo "UPDATE_NEEDED=true" >> $GITHUB_ENV
+              echo -e "\033[33m首次运行，需要初始化版本\033[0m"
+            fi
+          fi
+
+      - name: 如果需要，清理旧文件并下载新版本
+        if: env.UPDATE_NEEDED == 'true'
+        run: |
+          echo -e "\033[34m[清理旧文件]\033[0m"
+          PROTECTED_FILES="README.md 自动更新类型.txt version.txt"
+          for file in *; do
+            if [[ "$PROTECTED_FILES" != *"$file"* ]]; then
+              echo "删除文件: $file"
+              rm -rf "$file"
+            fi
+          done
+          
+          echo -e "\033[34m[下载最新 worker.zip]\033[0m"
+          wget -O worker.zip "$DOWNLOAD_URL"
+          echo -e "\033[34m[解压 worker.zip]\033[0m"
+          unzip worker.zip
+          echo -e "\033[34m[删除 worker.zip]\033[0m"
+          rm worker.zip
+          echo -e "\033[34m[记录版本信息]\033[0m"
+          echo "当前版本: $TAG_NAME" > version.txt
+          echo "版本类型: $VERSION_TYPE" >> version.txt
+          echo "更新时间: $(date '+%Y-%m-%d %H:%M:%S')" >> version.txt
+          if [ "$FORCE_UPDATE" = "true" ]; then
+            echo "更新方式: 手动强制更新" >> version.txt
+          fi
+
+      - name: 提交更改
+        if: env.UPDATE_NEEDED == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "${{ env.FORCE_UPDATE == 'true' && '强制' || '' }}同步最新 Worker 版本：${{ env.TAG_NAME }} (类型: ${{ env.VERSION_TYPE }})"
+          commit_author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          push_options: --force
