@@ -741,105 +741,66 @@ function socks5AddressParser(address) {
     return { username, password, hostname, port };
 }
 function 恢复伪装信息(content, userID, hostName, fakeUserID, fakeHostName, isBase64) {
-	if (isBase64) content = atob(content);  // 如果内容是Base64编码的，先解码
-
-	// 使用正则表达式全局替换（'g'标志）
-	// 将所有出现的假用户ID和假主机名替换为真实的值
+	if (isBase64) content = atob(content);
 	content = content.replace(new RegExp(fakeUserID, 'g'), userID)
 		.replace(new RegExp(fakeHostName, 'g'), hostName);
-
-	if (isBase64) content = btoa(content);  // 如果原内容是Base64编码的，处理完后再次编码
-
+	if (isBase64) content = btoa(content);
 	return content;
 }
 
-/**
- * 双重MD5哈希函数
- * 这个函数对输入文本进行两次MD5哈希，增强安全性
- * 第二次哈希使用第一次哈希结果的一部分作为输入
- * 
- * @param {string} 文本 要哈希的文本
- * @returns {Promise<string>} 双重哈希后的小写十六进制字符串
- */
 async function 双重哈希(文本) {
 	const 编码器 = new TextEncoder();
-
 	const 第一次哈希 = await crypto.subtle.digest('MD5', 编码器.encode(文本));
 	const 第一次哈希数组 = Array.from(new Uint8Array(第一次哈希));
 	const 第一次十六进制 = 第一次哈希数组.map(字节 => 字节.toString(16).padStart(2, '0')).join('');
-
 	const 第二次哈希 = await crypto.subtle.digest('MD5', 编码器.encode(第一次十六进制.slice(7, 27)));
 	const 第二次哈希数组 = Array.from(new Uint8Array(第二次哈希));
 	const 第二次十六进制 = 第二次哈希数组.map(字节 => 字节.toString(16).padStart(2, '0')).join('');
-
 	return 第二次十六进制.toLowerCase();
 }
 
 async function 代理URL(代理网址, 目标网址) {
 	const 网址列表 = await 整理(代理网址);
 	const 完整网址 = 网址列表[Math.floor(Math.random() * 网址列表.length)];
-
-	// 解析目标 URL
 	let 解析后的网址 = new URL(完整网址);
-	console.log(解析后的网址);
-	// 提取并可能修改 URL 组件
 	let 协议 = 解析后的网址.protocol.slice(0, -1) || 'https';
 	let 主机名 = 解析后的网址.hostname;
 	let 路径名 = 解析后的网址.pathname;
 	let 查询参数 = 解析后的网址.search;
-
-	// 处理路径名
 	if (路径名.charAt(路径名.length - 1) == '/') {
 		路径名 = 路径名.slice(0, -1);
 	}
 	路径名 += 目标网址.pathname;
-
-	// 构建新的 URL
 	let 新网址 = `${协议}://${主机名}${路径名}${查询参数}`;
-
-	// 反向代理请求
 	let 响应 = await fetch(新网址);
-
-	// 创建新的响应
 	let 新响应 = new Response(响应.body, {
 		status: 响应.status,
 		statusText: 响应.statusText,
 		headers: 响应.headers
 	});
-
-	// 添加自定义头部，包含 URL 信息
-	//新响应.headers.set('X-Proxied-By', 'Cloudflare Worker');
-	//新响应.headers.set('X-Original-URL', 完整网址);
 	新响应.headers.set('X-New-URL', 新网址);
-
 	return 新响应;
 }
 
 const 啥啥啥_写的这是啥啊 = atob('ZG14bGMzTT0=');
 function 配置信息(UUID, 域名地址) {
 	const 协议类型 = atob(啥啥啥_写的这是啥啊);
-
 	const 别名 = FileName;
 	let 地址 = 域名地址;
 	let 端口 = 443;
-
 	const 用户ID = UUID;
 	const 加密方式 = 'none';
-
 	const 传输层协议 = 'ws';
 	const 伪装域名 = 域名地址;
 	const 路径 = path;
-
 	let 传输层安全 = ['tls', true];
 	const SNI = 域名地址;
 	const 指纹 = 'randomized';
-
 	if (域名地址.includes('.workers.dev')) {
 		地址 = atob('dmlzYS5jbg==');
 		端口 = 80;
 		传输层安全 = ['', false];
 	}
-
 	const 威图瑞 = `${协议类型}://${用户ID}@${地址}:${端口}\u003f\u0065\u006e\u0063\u0072\u0079` + 'p' + `${atob('dGlvbj0=') + 加密方式}\u0026\u0073\u0065\u0063\u0075\u0072\u0069\u0074\u0079\u003d${传输层安全[0]}&sni=${SNI}&fp=${指纹}&type=${传输层协议}&host=${伪装域名}&path=${encodeURIComponent(路径) + allowInsecure}&fragment=1,40-60,30-50,tlshello#${encodeURIComponent(别名)}`;
 	const 猫猫猫 = `- {name: ${FileName}, server: ${地址}, port: ${端口}, type: ${协议类型}, uuid: ${用户ID}, tls: ${传输层安全[1]}, alpn: [h3], udp: false, sni: ${SNI}, tfo: false, skip-cert-verify: ${SCV}, servername: ${伪装域名}, client-fingerprint: ${指纹}, network: ${传输层协议}, ws-opts: {path: "${路径}", headers: {${伪装域名}}}}`;
 	return [威图瑞, 猫猫猫];
@@ -847,13 +808,7 @@ function 配置信息(UUID, 域名地址) {
 
 let subParams = ['sub', 'base64', 'b64', 'clash', 'singbox', 'sb'];
 const cmad = decodeURIComponent(atob('dGVsZWdyYW0lMjAlRTQlQkElQTQlRTYlQjUlODElRTclQkUlQTQlMjAlRTYlOEElODAlRTYlOUMlQUYlRTUlQTQlQTclRTQlQkQlQUMlN0UlRTUlOUMlQTglRTclQkElQkYlRTUlOEYlOTElRTclODklOEMhJTNDYnIlM0UKJTNDYSUyMGhyZWYlM0QlMjdodHRwcyUzQSUyRiUyRnQubWUlMkZDTUxpdXNzc3MlMjclM0VodHRwcyUzQSUyRiUyRnQubWUlMkZDTUxpdXNzc3MlM0MlMkZhJTNFJTNDYnIlM0UKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tJTNDYnIlM0UKZ2l0aHViJTIwJUU5JUExJUI5JUU3JTlCJUFFJUU1JTlDJUIwJUU1JTlEJTgwJTIwU3RhciFTdGFyIVN0YXIhISElM0NiciUzRQolM0NhJTIwaHJlZiUzRCUyN2h0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRmNtbGl1JTJGZWRnZXR1bm5lbCUyNyUzRWh0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRmNtbGl1JTJGZWRnZXR1bm5lbCUzQyUyRmElM0UlM0NiciUzRQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0lM0NiciUzRQolMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjM='));
-/**
- * @param {string} userID
- * @param {string | null} hostName
- * @param {string} sub
- * @param {string} UA
- * @returns {Promise<string>}
- */
+
 async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fakeUserID, fakeHostName, env) {
 	if (sub) {
 		const match = sub.match(/^(?:https?:\/\/)?([^\/]+)/);
@@ -873,7 +828,6 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
 					链接地址: new Set(),
 					优选地址: new Set()
 				};
-
 				for (const 元素 of 优选地址数组) {
 					if (元素.startsWith('https://')) {
 						分类地址.接口地址.add(元素);
@@ -883,7 +837,6 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
 						分类地址.优选地址.add(元素);
 					}
 				}
-
 				addressesapi = [...分类地址.接口地址];
 				link = [...分类地址.链接地址];
 				addresses = [...分类地址.优选地址];
@@ -891,7 +844,6 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
 		}
 
 		if ((addresses.length + addressesapi.length + addressesnotls.length + addressesnotlsapi.length + addressescsv.length) == 0) {
-			// 定义 Cloudflare IP 范围的 CIDR 列表
 			let cfips = [
 				'103.21.244.0/24',
 				'104.16.0.0/13',
@@ -915,20 +867,17 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
 				'190.93.240.0/21',
 			];
 
-			// 生成符合给定 CIDR 范围的随机 IP 地址
 			function generateRandomIPFromCIDR(cidr) {
 				const [base, mask] = cidr.split('/');
 				const baseIP = base.split('.').map(Number);
 				const subnetMask = 32 - parseInt(mask, 10);
 				const maxHosts = Math.pow(2, subnetMask) - 1;
 				const randomHost = Math.floor(Math.random() * maxHosts);
-
 				const randomIP = baseIP.map((octet, index) => {
 					if (index < 2) return octet;
 					if (index === 2) return (octet & (255 << (subnetMask - 8))) + ((randomHost >> 8) & 255);
 					return (octet & (255 << subnetMask)) + (randomHost & 255);
 				});
-
 				return randomIP.join('.');
 			}
 			addresses = addresses.concat('127.0.0.1:1234#CFnat');
@@ -957,20 +906,16 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
 		if (proxyhostsURL && (!proxyhosts || proxyhosts.length == 0)) {
 			try {
 				const response = await fetch(proxyhostsURL);
-
 				if (!response.ok) {
 					console.error('获取地址时出错:', response.status, response.statusText);
-					return; // 如果有错误，直接返回
+					return;
 				}
-
 				const text = await response.text();
 				const lines = text.split('\n');
-				// 过滤掉空行或只包含空白字符的行
 				const nonEmptyLines = lines.filter(line => line.trim() !== '');
-
 				proxyhosts = proxyhosts.concat(nonEmptyLines);
 			} catch (error) {
-				//console.error('获取地址时出错:', error);
+				console.error('获取地址时出错:', error);
 			}
 		}
 		if (proxyhosts.length != 0) proxyhost = proxyhosts[Math.floor(Math.random() * proxyhosts.length)] + "/";
@@ -1063,12 +1008,12 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
 				qrcodeDiv.innerHTML = '';
 				new QRCode(qrcodeDiv, {
 					text: text,
-					width: 220, // 调整宽度
-					height: 220, // 调整高度
-					colorDark: "#000000", // 二维码颜色
-					colorLight: "#ffffff", // 背景颜色
-					correctLevel: QRCode.CorrectLevel.Q, // 设置纠错级别
-					scale: 1 // 调整像素颗粒度
+					width: 220,
+					height: 220,
+					colorDark: "#000000",
+					colorLight: "#ffffff",
+					correctLevel: QRCode.CorrectLevel.Q,
+					scale: 1
 				});
 			}
 
@@ -1120,7 +1065,6 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
 		let newAddressesnotlsapi = [];
 		let newAddressesnotlscsv = [];
 
-		// 如果是使用默认域名，则改成一个workers的域名，订阅器会加上代理
 		if (hostName.includes(".workers.dev")) {
 			noTLS = 'true';
 			fakeHostName = `${fakeHostName}.workers.dev`;
@@ -1145,23 +1089,18 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
 				if (proxyhostsURL && (!proxyhosts || proxyhosts.length == 0)) {
 					try {
 						const response = await fetch(proxyhostsURL);
-
 						if (!response.ok) {
 							console.error('获取地址时出错:', response.status, response.statusText);
-							return; // 如果有错误，直接返回
+							return;
 						}
-
 						const text = await response.text();
 						const lines = text.split('\n');
-						// 过滤掉空行或只包含空白字符的行
 						const nonEmptyLines = lines.filter(line => line.trim() !== '');
-
 						proxyhosts = proxyhosts.concat(nonEmptyLines);
 					} catch (error) {
 						console.error('获取地址时出错:', error);
 					}
 				}
-				// 使用Set对象去重
 				proxyhosts = [...new Set(proxyhosts)];
 			}
 
@@ -1202,9 +1141,7 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
 			}
 
 			if (_url.pathname == `/${fakeUserID}`) return content;
-
 			return 恢复伪装信息(content, userID, hostName, fakeUserID, fakeHostName, isBase64);
-
 		} catch (error) {
 			console.error('Error fetching content:', error);
 			return `Error fetching content: ${error.message}`;
@@ -1214,35 +1151,25 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
 
 async function 整理优选列表(api) {
 	if (!api || api.length === 0) return [];
-
 	let newapi = "";
-
-	// 创建一个AbortController对象，用于控制fetch请求的取消
 	const controller = new AbortController();
-
 	const timeout = setTimeout(() => {
-		controller.abort(); // 取消所有请求
-	}, 2000); // 2秒后触发
+		controller.abort();
+	}, 2000);
 
 	try {
-		// 使用Promise.allSettled等待所有API请求完成，无论成功或失败
-		// 对api数组进行遍历，对每个API地址发起fetch请求
 		const responses = await Promise.allSettled(api.map(apiUrl => fetch(apiUrl, {
 			method: 'get',
 			headers: {
 				'Accept': 'text/html,application/xhtml+xml,application/xml;',
 				'User-Agent': atob('Q0YtV29ya2Vycy1lZGdldHVubmVsL2NtbGl1')
 			},
-			signal: controller.signal // 将AbortController的信号量添加到fetch请求中，以便于需要时可以取消请求
-		}).then(response => response.ok ? response.text() : Promise.reject())));
+			signal: controller.signal
+		}).then(response => response.ok ? response.text() : Promise.reject()));
 
-		// 遍历所有响应
 		for (const [index, response] of responses.entries()) {
-			// 检查响应状态是否为'fulfilled'，即请求成功完成
 			if (response.status === 'fulfilled') {
-				// 获取响应的内容
 				const content = await response.value;
-
 				const lines = content.split(/\r?\n/);
 				let 节点备注 = '';
 				let 测速端口 = '443';
@@ -1250,7 +1177,6 @@ async function 整理优选列表(api) {
 				if (lines[0].split(',').length > 3) {
 					const idMatch = api[index].match(/id=([^&]*)/);
 					if (idMatch) 节点备注 = idMatch[1];
-
 					const portMatch = api[index].match(/port=([^&]*)/);
 					if (portMatch) 测速端口 = portMatch[1];
 
@@ -1262,9 +1188,7 @@ async function 整理优选列表(api) {
 						}
 					}
 				} else {
-					// 验证当前apiUrl是否带有'proxyip=true'
 					if (api[index].includes('proxyip=true')) {
-						// 如果URL带有'proxyip=true'，则将内容添加到proxyIPPool
 						proxyIPPool = proxyIPPool.concat((await 整理(content)).map(item => {
 							const baseItem = item.split('#')[0] || item;
 							if (baseItem.includes(':')) {
@@ -1275,10 +1199,9 @@ async function 整理优选列表(api) {
 							} else {
 								return `${baseItem}:443`;
 							}
-							return null; // 不符合条件时返回 null
-						}).filter(Boolean)); // 过滤掉 null 值
+							return null;
+						}).filter(Boolean));
 					}
-					// 将内容添加到newapi中
 					newapi += content + '\n';
 				}
 			}
@@ -1286,13 +1209,10 @@ async function 整理优选列表(api) {
 	} catch (error) {
 		console.error(error);
 	} finally {
-		// 无论成功或失败，最后都清除设置的超时定时器
 		clearTimeout(timeout);
 	}
 
 	const newAddressesapi = await 整理(newapi);
-
-	// 返回处理后的结果
 	return newAddressesapi;
 }
 
@@ -1306,47 +1226,38 @@ async function 整理测速结果(tls) {
 	for (const csvUrl of addressescsv) {
 		try {
 			const response = await fetch(csvUrl);
-
 			if (!response.ok) {
 				console.error('获取CSV地址时出错:', response.status, response.statusText);
 				continue;
 			}
-
-			const text = await response.text();// 使用正确的字符编码解析文本内容
+			const text = await response.text();
 			let lines;
 			if (text.includes('\r\n')) {
 				lines = text.split('\r\n');
 			} else {
 				lines = text.split('\n');
 			}
-
-			// 检查CSV头部是否包含必需字段
 			const header = lines[0].split(',');
 			const tlsIndex = header.indexOf('TLS');
-
-			const ipAddressIndex = 0;// IP地址在 CSV 头部的位置
-			const portIndex = 1;// 端口在 CSV 头部的位置
-			const dataCenterIndex = tlsIndex + remarkIndex; // 数据中心是 TLS 的后一个字段
+			const ipAddressIndex = 0;
+			const portIndex = 1;
+			const dataCenterIndex = tlsIndex + remarkIndex;
 
 			if (tlsIndex === -1) {
 				console.error('CSV文件缺少必需的字段');
 				continue;
 			}
 
-			// 从第二行开始遍历CSV行
 			for (let i = 1; i < lines.length; i++) {
 				const columns = lines[i].split(',');
-				const speedIndex = columns.length - 1; // 最后一个字段
-				// 检查TLS是否为"TRUE"且速度大于DLS
+				const speedIndex = columns.length - 1;
 				if (columns[tlsIndex].toUpperCase() === tls && parseFloat(columns[speedIndex]) > DLS) {
 					const ipAddress = columns[ipAddressIndex];
 					const port = columns[portIndex];
 					const dataCenter = columns[dataCenterIndex];
-
 					const formattedAddress = `${ipAddress}:${port}#${dataCenter}`;
 					newAddressescsv.push(formattedAddress);
 					if (csvUrl.includes('proxyip=true') && columns[tlsIndex].toUpperCase() == 'true' && !httpsPorts.includes(port)) {
-						// 如果URL带有'proxyip=true'，则将内容添加到proxyIPPool
 						proxyIPPool.push(`${ipAddress}:${port}`);
 					}
 				}
@@ -1373,7 +1284,6 @@ function 生成本地订阅(host, UUID, noTLS, newAddressesapi, newAddressescsv,
 		notlsresponseBody = uniqueAddressesnotls.map(address => {
 			let port = "-1";
 			let addressid = address;
-
 			const match = addressid.match(regex);
 			if (!match) {
 				if (address.includes(':') && address.includes('#')) {
@@ -1391,7 +1301,6 @@ function 生成本地订阅(host, UUID, noTLS, newAddressesapi, newAddressescsv,
 					address = parts[0];
 					addressid = parts[1];
 				}
-
 				if (addressid.includes(':')) {
 					addressid = addressid.split(':')[0];
 				}
@@ -1415,22 +1324,15 @@ function 生成本地订阅(host, UUID, noTLS, newAddressesapi, newAddressescsv,
 			let 最终路径 = path;
 			let 节点备注 = '';
 			const 协议类型 = atob(啥啥啥_写的这是啥啊);
-
 			const 维列斯Link = `${协议类型}://${UUID}@${address}:${port + atob('P2VuY3J5cHRpb249bm9uZSZzZWN1cml0eT0mdHlwZT13cyZob3N0PQ==') + 伪装域名}&path=${encodeURIComponent(最终路径)}#${encodeURIComponent(addressid + 节点备注)}`;
-
 			return 维列斯Link;
-
 		}).join('\n');
-
 	}
 
-	// 使用Set对象去重
 	const uniqueAddresses = [...new Set(addresses)];
-
 	const responseBody = uniqueAddresses.map(address => {
 		let port = "-1";
 		let addressid = address;
-
 		const match = addressid.match(regex);
 		if (!match) {
 			if (address.includes(':') && address.includes('#')) {
@@ -1448,7 +1350,6 @@ function 生成本地订阅(host, UUID, noTLS, newAddressesapi, newAddressescsv,
 				address = parts[0];
 				addressid = parts[1];
 			}
-
 			if (addressid.includes(':')) {
 				addressid = addressid.split(':')[0];
 			}
@@ -1482,34 +1383,25 @@ function 生成本地订阅(host, UUID, noTLS, newAddressesapi, newAddressescsv,
 
 		const 协议类型 = atob(啥啥啥_写的这是啥啊);
 		const 维列斯Link = `${协议类型}://${UUID}@${address}:${port + atob('P2VuY3J5cHRpb249bm9uZSZzZWN1cml0eT10bHMmc25pPQ==') + 伪装域名}&fp=random&type=ws&host=${伪装域名}&path=${encodeURIComponent(最终路径) + allowInsecure}&fragment=1,40-60,30-50,tlshello#${encodeURIComponent(addressid + 节点备注)}`;
-
 		return 维列斯Link;
 	}).join('\n');
 
-	let base64Response = responseBody; // 重新进行 Base64 编码
+	let base64Response = responseBody;
 	if (noTLS == 'true') base64Response += `\n${notlsresponseBody}`;
 	if (link.length > 0) base64Response += '\n' + link.join('\n');
 	return btoa(base64Response);
 }
 
 async function 整理(内容) {
-	// 将制表符、双引号、单引号和换行符都替换为逗号
-	// 然后将连续的多个逗号替换为单个逗号
 	var 替换后的内容 = 内容.replace(/[	|"'\r\n]+/g, ',').replace(/,+/g, ',');
-
-	// 删除开头和结尾的逗号（如果有的话）
 	if (替换后的内容.charAt(0) == ',') 替换后的内容 = 替换后的内容.slice(1);
 	if (替换后的内容.charAt(替换后的内容.length - 1) == ',') 替换后的内容 = 替换后的内容.slice(0, 替换后的内容.length - 1);
-
-	// 使用逗号分割字符串，得到地址数组
 	const 地址数组 = 替换后的内容.split(',');
-
 	return 地址数组;
 }
 
 async function sendMessage(type, ip, add_data = "") {
 	if (!BotToken || !ChatID) return;
-
 	try {
 		let msg = "";
 		const response = await fetch(`http://ip-api.com/json/${ip}?lang=zh-CN`);
@@ -1519,7 +1411,6 @@ async function sendMessage(type, ip, add_data = "") {
 		} else {
 			msg = `${type}\nIP: ${ip}\n<tg-spoiler>${add_data}`;
 		}
-
 		const url = `https://api.telegram.org/bot${BotToken}/sendMessage?chat_id=${ChatID}&parse_mode=HTML&text=${encodeURIComponent(msg)}`;
 		return fetch(url, {
 			method: 'GET',
@@ -1540,8 +1431,8 @@ function isValidIPv4(address) {
 }
 
 function 生成动态UUID(密钥) {
-	const 时区偏移 = 8; // 北京时间相对于UTC的时区偏移+8小时
-	const 起始日期 = new Date(2007, 6, 7, 更新时间, 0, 0); // 固定起始日期为2007年7月7日的凌晨3点
+	const 时区偏移 = 8;
+	const 起始日期 = new Date(2007, 6, 7, 更新时间, 0, 0);
 	const 一周的毫秒数 = 1000 * 60 * 60 * 24 * 有效时间;
 
 	function 获取当前周数() {
@@ -1560,28 +1451,20 @@ function 生成动态UUID(密钥) {
 		});
 	}
 
-	const 当前周数 = 获取当前周数(); // 获取当前周数
+	const 当前周数 = 获取当前周数();
 	const 结束时间 = new Date(起始日期.getTime() + 当前周数 * 一周的毫秒数);
-
-	// 生成两个 UUID
 	const 当前UUIDPromise = 生成UUID(密钥 + 当前周数);
 	const 上一个UUIDPromise = 生成UUID(密钥 + (当前周数 - 1));
-
-	// 格式化到期时间
-	const 到期时间UTC = new Date(结束时间.getTime() - 时区偏移 * 60 * 60 * 1000); // UTC时间
+	const 到期时间UTC = new Date(结束时间.getTime() - 时区偏移 * 60 * 60 * 1000);
 	const 到期时间字符串 = `到期时间(UTC): ${到期时间UTC.toISOString().slice(0, 19).replace('T', ' ')} (UTC+8): ${结束时间.toISOString().slice(0, 19).replace('T', ' ')}\n`;
-
 	return Promise.all([当前UUIDPromise, 上一个UUIDPromise, 到期时间字符串]);
 }
 
 async function 迁移地址列表(env, txt = 'ADD.txt') {
 	const 旧数据 = await env.KV.get(`/${txt}`);
 	const 新数据 = await env.KV.get(txt);
-
 	if (旧数据 && !新数据) {
-		// 写入新位置
 		await env.KV.put(txt, 旧数据);
-		// 删除旧数据
 		await env.KV.delete(`/${txt}`);
 		return true;
 	}
@@ -1590,7 +1473,6 @@ async function 迁移地址列表(env, txt = 'ADD.txt') {
 
 async function KV(request, env, txt = 'ADD.txt') {
 	try {
-		// POST请求处理
 		if (request.method === "POST") {
 			if (!env.KV) return new Response("未绑定KV空间", { status: 400 });
 			try {
@@ -1603,10 +1485,8 @@ async function KV(request, env, txt = 'ADD.txt') {
 			}
 		}
 
-		// GET请求部分
 		let content = '';
 		let hasKV = !!env.KV;
-
 		if (hasKV) {
 			try {
 				content = await env.KV.get(txt) || '';
@@ -1626,9 +1506,9 @@ async function KV(request, env, txt = 'ADD.txt') {
 				<style>
 					body {
 						margin: 0;
-						padding: 15px; /* 调整padding */
+						padding: 15px;
 						box-sizing: border-box;
-						font-size: 13px; /* 设置全局字体大小 */
+						font-size: 13px;
 					}
 					.editor-container {
 						width: 100%;
@@ -1637,9 +1517,9 @@ async function KV(request, env, txt = 'ADD.txt') {
 					}
 					.editor {
 						width: 100%;
-						height: 520px; /* 调整高度 */
-						margin: 15px 0; /* 调整margin */
-						padding: 10px; /* 调整padding */
+						height: 520px;
+						margin: 15px 0;
+						padding: 10px;
 						box-sizing: border-box;
 						border: 1px solid #ccc;
 						border-radius: 4px;
@@ -1649,13 +1529,13 @@ async function KV(request, env, txt = 'ADD.txt') {
 						resize: none;
 					}
 					.save-container {
-						margin-top: 8px; /* 调整margin */
+						margin-top: 8px;
 						display: flex;
 						align-items: center;
-						gap: 10px; /* 调整gap */
+						gap: 10px;
 					}
 					.save-btn, .back-btn {
-						padding: 6px 15px; /* 调整padding */
+						padding: 6px 15px;
 						color: white;
 						border: none;
 						border-radius: 4px;
@@ -1730,16 +1610,12 @@ async function KV(request, env, txt = 'ADD.txt') {
 							const updateButtonText = (step) => {
 								button.textContent = \`保存中: \${step}\`;
 							};
-							// 检测是否为iOS设备
 							const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-							
-							// 仅在非iOS设备上执行replaceFullwidthColon
 							if (!isIOS) {
 								replaceFullwidthColon();
 							}
 							updateButtonText('开始保存');
 							button.disabled = true;
-							// 获取textarea内容和原始内容
 							const textarea = document.getElementById('content');
 							if (!textarea) {
 								throw new Error('找不到文本编辑区域');
@@ -1831,7 +1707,6 @@ async function KV(request, env, txt = 'ADD.txt') {
 					}
 				}
 		
-				// 初始化 noticeContent 的 display 属性
 				document.addEventListener('DOMContentLoaded', () => {
 					document.getElementById('noticeContent').style.display = 'none';
 				});
@@ -1853,7 +1728,6 @@ async function KV(request, env, txt = 'ADD.txt') {
 }
 
 async function resolveToIPv6(target) {
-	// 检查是否为IPv4
 	function isIPv4(str) {
 		const parts = str.split('.');
 		return parts.length === 4 && parts.every(part => {
@@ -1862,52 +1736,40 @@ async function resolveToIPv6(target) {
 		});
 	}
 
-	// 检查是否为IPv6
 	function isIPv6(str) {
 		return str.includes(':') && /^[0-9a-fA-F:]+$/.test(str);
 	}
 
-	// 获取域名的IPv4地址
 	async function fetchIPv4(domain) {
 		const url = `https://cloudflare-dns.com/dns-query?name=${domain}&type=A`;
 		const response = await fetch(url, {
 			headers: { 'Accept': 'application/dns-json' }
 		});
-
 		if (!response.ok) throw new Error('DNS查询失败');
-
 		const data = await response.json();
 		const ipv4s = (data.Answer || [])
 			.filter(record => record.type === 1)
 			.map(record => record.data);
-
 		if (ipv4s.length === 0) throw new Error('未找到IPv4地址');
 		return ipv4s[Math.floor(Math.random() * ipv4s.length)];
 	}
 
-	// 查询NAT64 IPv6地址
 	async function queryNAT64(domain) {
 		const socket = connect(atob('ZG90Lm5hdDY0LmRrOjg1Mw=='), {
 			secureTransport: 'on',
 			allowHalfOpen: false
 		});
-
 		const writer = socket.writable.getWriter();
 		const reader = socket.readable.getReader();
-
 		try {
-			// 发送DNS查询
 			const query = buildDNSQuery(domain);
 			const queryWithLength = new Uint8Array(query.length + 2);
 			queryWithLength[0] = query.length >> 8;
 			queryWithLength[1] = query.length & 0xFF;
 			queryWithLength.set(query, 2);
 			await writer.write(queryWithLength);
-
-			// 读取响应
 			const response = await readDNSResponse(reader);
 			const ipv6s = parseIPv6(response);
-
 			return ipv6s.length > 0 ? ipv6s[0] : '未找到IPv6地址';
 		} finally {
 			await writer.close();
@@ -1915,83 +1777,61 @@ async function resolveToIPv6(target) {
 		}
 	}
 
-	// 构建DNS查询包
 	function buildDNSQuery(domain) {
 		const buffer = new ArrayBuffer(512);
 		const view = new DataView(buffer);
 		let offset = 0;
-
-		// DNS头部
-		view.setUint16(offset, Math.floor(Math.random() * 65536)); offset += 2; // ID
-		view.setUint16(offset, 0x0100); offset += 2; // 标志
-		view.setUint16(offset, 1); offset += 2; // 问题数
-		view.setUint16(offset, 0); offset += 6; // 答案数/权威数/附加数
-
-		// 域名编码
+		view.setUint16(offset, Math.floor(Math.random() * 65536)); offset += 2;
+		view.setUint16(offset, 0x0100); offset += 2;
+		view.setUint16(offset, 1); offset += 2;
+		view.setUint16(offset, 0); offset += 6;
 		for (const label of domain.split('.')) {
 			view.setUint8(offset++, label.length);
 			for (let i = 0; i < label.length; i++) {
 				view.setUint8(offset++, label.charCodeAt(i));
 			}
 		}
-		view.setUint8(offset++, 0); // 结束标记
-
-		// 查询类型和类
-		view.setUint16(offset, 28); offset += 2; // AAAA记录
-		view.setUint16(offset, 1); offset += 2; // IN类
-
+		view.setUint8(offset++, 0);
+		view.setUint16(offset, 28); offset += 2;
+		view.setUint16(offset, 1); offset += 2;
 		return new Uint8Array(buffer, 0, offset);
 	}
 
-	// 读取DNS响应
 	async function readDNSResponse(reader) {
 		const chunks = [];
 		let totalLength = 0;
 		let expectedLength = null;
-
 		while (true) {
 			const { value, done } = await reader.read();
 			if (done) break;
-
 			chunks.push(value);
 			totalLength += value.length;
-
 			if (expectedLength === null && totalLength >= 2) {
 				expectedLength = (chunks[0][0] << 8) | chunks[0][1];
 			}
-
 			if (expectedLength !== null && totalLength >= expectedLength + 2) {
 				break;
 			}
 		}
-
-		// 合并数据并跳过长度前缀
 		const fullResponse = new Uint8Array(totalLength);
 		let offset = 0;
 		for (const chunk of chunks) {
 			fullResponse.set(chunk, offset);
 			offset += chunk.length;
 		}
-
 		return fullResponse.slice(2);
 	}
 
-	// 解析IPv6地址
 	function parseIPv6(response) {
 		const view = new DataView(response.buffer);
-		let offset = 12; // 跳过DNS头部
-
-		// 跳过问题部分
+		let offset = 12;
 		while (view.getUint8(offset) !== 0) {
 			offset += view.getUint8(offset) + 1;
 		}
 		offset += 5;
-
 		const answers = [];
-		const answerCount = view.getUint16(6); // 答案数量
-
+		const answerCount = view.getUint16(6);
 		for (let i = 0; i < answerCount; i++) {
-			// 跳过名称
 			if ((view.getUint8(offset) & 0xC0) === 0xC0) {
 				offset += 2;
 			} else {
@@ -2000,12 +1840,10 @@ async function resolveToIPv6(target) {
 				}
 				offset++;
 			}
-
 			const type = view.getUint16(offset); offset += 2;
-			offset += 6; // 跳过类和TTL
+			offset += 6;
 			const dataLength = view.getUint16(offset); offset += 2;
-
-			if (type === 28 && dataLength === 16) { // AAAA记录
+			if (type === 28 && dataLength === 16) {
 				const parts = [];
 				for (let j = 0; j < 8; j++) {
 					parts.push(view.getUint16(offset + j * 2).toString(16));
@@ -2014,28 +1852,23 @@ async function resolveToIPv6(target) {
 			}
 			offset += dataLength;
 		}
-
 		return answers;
 	}
 
 	try {
-		// 判断输入类型并处理
 		if (isIPv6(target)) {
-			return target; // IPv6直接返回
+			return target;
 		}
-
 		let domain;
 		if (isIPv4(target)) {
-			domain = target + atob('LmlwLjA5MDIyNy54eXo='); // IPv4转换为NAT64域名
+			domain = target + atob('LmlwLjA5MDIyNy54eXo=');
 		} else {
-			// 域名先解析IPv4再转NAT64
 			const ipv4 = await fetchIPv4(target);
 			domain = ipv4 + atob('LmlwLjA5MDIyNy54eXo=');
 		}
-
 		return await queryNAT64(domain);
 	} catch (error) {
 		console.error('解析错误:', error);
 		return `解析失败: ${error.message}`;
 	}
-}
+				   }
