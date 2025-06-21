@@ -743,7 +743,7 @@ function socks5AddressParser(address) {
 function 恢复伪装信息(content, userID, hostName, fakeUserID, fakeHostName, isBase64) {
     if (isBase64) content = atob(content);
     content = content.replace(new RegExp(fakeUserID, 'g'), userID)
-        .replace(new RegExp(fakeHostName, 'g'), hostName);
+                    .replace(new RegExp(fakeHostName, 'g'), hostName);
     if (isBase64) content = btoa(content);
     return content;
 }
@@ -751,30 +751,25 @@ function 恢复伪装信息(content, userID, hostName, fakeUserID, fakeHostName,
 async function 双重哈希(文本) {
     const 编码器 = new TextEncoder();
     const 第一次哈希 = await crypto.subtle.digest('MD5', 编码器.encode(文本));
-    const 第一次哈希数组 = Array.from(new Uint8Array(第一次哈希));
-    const 第一次十六进制 = 第一次哈希数组.map(字节 => 字节.toString(16).padStart(2, '0')).join('');
+    const 第一次十六进制 = Array.from(new Uint8Array(第一次哈希)).map(b => b.toString(16).padStart(2, '0')).join('');
     const 第二次哈希 = await crypto.subtle.digest('MD5', 编码器.encode(第一次十六进制.slice(7, 27)));
-    const 第二次哈希数组 = Array.from(new Uint8Array(第二次哈希));
-    return 第二次哈希数组.map(字节 => 字节.toString(16).padStart(2, '0')).join('').toLowerCase();
+    return Array.from(new Uint8Array(第二次哈希)).map(b => b.toString(16).padStart(2, '0')).join('').toLowerCase();
 }
 
 async function 代理URL(代理网址, 目标网址) {
     const 网址列表 = await 整理(代理网址);
     const 完整网址 = 网址列表[Math.floor(Math.random() * 网址列表.length)];
-    let 解析后的网址 = new URL(完整网址);
+    const 解析后的网址 = new URL(完整网址);
+    
     let 协议 = 解析后的网址.protocol.slice(0, -1) || 'https';
-    let 主机名 = 解析后的网址.hostname;
     let 路径名 = 解析后的网址.pathname;
-    let 查询参数 = 解析后的网址.search;
-
-    if (路径名.charAt(路径名.length - 1) == '/') {
-        路径名 = 路径名.slice(0, -1);
-    }
+    if (路径名.endsWith('/')) 路径名 = 路径名.slice(0, -1);
     路径名 += 目标网址.pathname;
-
-    let 新网址 = `${协议}://${主机名}${路径名}${查询参数}`;
-    let 响应 = await fetch(新网址);
-    let 新响应 = new Response(响应.body, {
+    
+    const 新网址 = `${协议}://${解析后的网址.hostname}${路径名}${解析后的网址.search}`;
+    const 响应 = await fetch(新网址);
+    
+    const 新响应 = new Response(响应.body, {
         status: 响应.status,
         statusText: 响应.statusText,
         headers: 响应.headers
@@ -786,31 +781,23 @@ async function 代理URL(代理网址, 目标网址) {
 const 啥啥啥_写的这是啥啊 = atob('ZG14bGMzTT0=');
 function 配置信息(UUID, 域名地址) {
     const 协议类型 = atob(啥啥啥_写的这是啥啊);
-    const 别名 = FileName;
     let 地址 = 域名地址;
     let 端口 = 443;
-    const 用户ID = UUID;
-    const 加密方式 = 'none';
-    const 传输层协议 = 'ws';
-    const 伪装域名 = 域名地址;
-    const 路径 = path;
     let 传输层安全 = ['tls', true];
-    const SNI = 域名地址;
-    const 指纹 = 'randomized';
-
+    
     if (域名地址.includes('.workers.dev')) {
         地址 = atob('dmlzYS5jbg==');
         端口 = 80;
         传输层安全 = ['', false];
     }
-
-    const 威图瑞 = `${协议类型}://${用户ID}@${地址}:${端口}\u003f\u0065\u006e\u0063\u0072\u0079` + 'p' + `${atob('dGlvbj0=') + 加密方式}\u0026\u0073\u0065\u0063\u0075\u0072\u0069\u0074\u0079\u003d${传输层安全[0]}&sni=${SNI}&fp=${指纹}&type=${传输层协议}&host=${伪装域名}&path=${encodeURIComponent(路径) + allowInsecure}&fragment=1,40-60,30-50,tlshello#${encodeURIComponent(别名)}`;
-    const 猫猫猫 = `- {name: ${FileName}, server: ${地址}, port: ${端口}, type: ${协议类型}, uuid: ${用户ID}, tls: ${传输层安全[1]}, alpn: [h3], udp: false, sni: ${SNI}, tfo: false, skip-cert-verify: ${SCV}, servername: ${伪装域名}, client-fingerprint: ${指纹}, network: ${传输层协议}, ws-opts: {path: "${路径}", headers: {${伪装域名}}}}`;
+    
+    const 威图瑞 = `${协议类型}://${UUID}@${地址}:${端口}?encryption=none&security=${传输层安全[0]}&sni=${域名地址}&fp=randomized&type=ws&host=${域名地址}&path=${encodeURIComponent(path)}${allowInsecure}&fragment=1,40-60,30-50,tlshello#${encodeURIComponent(FileName)}`;
+    const 猫猫猫 = `- {name: ${FileName}, server: ${地址}, port: ${端口}, type: ${协议类型}, uuid: ${UUID}, tls: ${传输层安全[1]}, alpn: [h3], udp: false, sni: ${域名地址}, tfo: false, skip-cert-verify: ${SCV}, servername: ${域名地址}, client-fingerprint: randomized, network: ws, ws-opts: {path: "${path}", headers: {Host: ${域名地址}}}}`;
     return [威图瑞, 猫猫猫];
 }
 
 let subParams = ['sub', 'base64', 'b64', 'clash', 'singbox', 'sb'];
-const cmad = decodeURIComponent(atob('dGVsZWdyYW0lMjAlRTQlQkElQTQlRTYlQjUlODElRTclQkUlQTQlMjAlRTYlOEElODAlRTYlOUMlQUYlRTUlQTQlQTclRTQlQkQlQUMlN0UlRTUlOUMlQTglRTclQkElQkYlRTUlOEYlOTElRTclODklOEMhJTNDYnIlM0UKJTNDYSUyMGhyZWYlM0QlMjdodHRwcyUzQSUyRiUyRnQubWUlMkZDTUxpdXNzc3MlMjclM0VodHRwcyUzQSUyRiUyRnQubWUlMkZDTUxpdXNzc3MlM0MlMkZhJTNFJTNDYnIlM0UKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tJTNDYnIlM0UKZ2l0aHViJTIwJUU5JUExJUI5JUU3JTlCJUFFJUU1JTlDJUIwJUU1JTlEJTgwJTIwU3RhciFTdGFyIVN0YXIhISElM0NiciUzRQolM0NhJTIwaHJlZiUzRCUyN2h0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRmNtbGl1JTJGZWRnZXR1bm5lbCUyNyUzRWh0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRmNtbGl1JTJGZWRnZXR1bm5lbCUzQyUyRmElM0UlM0NiciUzRQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0lM0NiciUzRQolMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjM='));
+const cmad = decodeURIComponent(atob('dGVsZWdyYW0lMjAlRTQlQkElQTQlRTYlQjUlODElRTclQkUlQTQlMjAlRTYlOEElODAlRTYlOUMlQUYlRTUlQTQlQTclRTQlQkQlQUMlN0UlRTUlOUMlQTglRTclQkElQkYlRTUlOEYlOTElRTclODklOEMhJTNDYnIlM0UKJTNDYSUyMGhyZWYlM0QlMjdodHRwcyUzQSUyRiUyRnQubWUlMkZDTUxpdXNzc3MlMjclM0VodHRwcyUzQSUyRiUyRnQubWUlMkZDTUxpdXNzc3MlM0MlMkZhJTNFJTNDYnIlM0UKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tJTNDYnIlM0UKZ2l0aHViJTIwJUU5JUExJUI5JUU3JTlCJUFFJUU1JTlDJUIwJUU1JTlEJTgwJTIwU3RhciFTdGFyIVN0YXIhISElM0NiciUzRQolM0NhJTIwaHJlZiUzRCUyN2h0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRmNtbGl1JTJGZWRnZXR1bm5lbCUyNyUzRWh0dHBzJTNBJTJGJTJGZ2l0aHViLmNvbSUyRmNtbGl1JTJGZWRnZXR1bm5lbCUzQyUyRmElM0UlM0NiciUzRQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0lM0NiciUzRQolMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjMlMjM='));
 
 async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fakeUserID, fakeHostName, env) {
     if (sub) {
@@ -818,130 +805,98 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
         if (match) sub = match[1];
         const subs = await 整理(sub);
         if (subs.length > 1) sub = subs[0];
-    } else {
-        if (env.KV) {
-            await 迁移地址列表(env);
-            const 优选地址列表 = await env.KV.get('ADD.txt');
-            if (优选地址列表) {
-                const 优选地址数组 = await 整理(优选地址列表);
-                const 分类地址 = {
-                    接口地址: new Set(),
-                    链接地址: new Set(),
-                    优选地址: new Set()
-                };
-                for (const 元素 of 优选地址数组) {
-                    if (元素.startsWith('https://')) 分类地址.接口地址.add(元素);
-                    else if (元素.includes('://')) 分类地址.链接地址.add(元素);
-                    else 分类地址.优选地址.add(元素);
-                }
-                addressesapi = [...分类地址.接口地址];
-                link = [...分类地址.链接地址];
-                addresses = [...分类地址.优选地址];
-            }
-        }
-
-        if ((addresses.length + addressesapi.length + addressesnotls.length + addressesnotlsapi.length + addressescsv.length) == 0) {
-            let cfips = [
-                '103.21.244.0/24',
-                '104.16.0.0/13',
-                '104.24.0.0/14',
-                '172.64.0.0/14',
-                '104.16.0.0/14',
-                '104.24.0.0/15',
-                '141.101.64.0/19',
-                '172.64.0.0/14',
-                '188.114.96.0/21',
-                '190.93.240.0/21',
-                '162.159.152.0/23',
-                '104.16.0.0/13',
-                '104.24.0.0/14',
-                '172.64.0.0/14',
-                '104.16.0.0/14',
-                '104.24.0.0/15',
-                '141.101.64.0/19',
-                '172.64.0.0/14',
-                '188.114.96.0/21',
-                '190.93.240.0/21',
-            ];
-
-            function generateRandomIPFromCIDR(cidr) {
-                const [base, mask] = cidr.split('/');
-                const baseIP = base.split('.').map(Number);
-                const subnetMask = 32 - parseInt(mask, 10);
-                const maxHosts = Math.pow(2, subnetMask) - 1;
-                const randomHost = Math.floor(Math.random() * maxHosts);
-                const randomIP = baseIP.map((octet, index) => {
-                    if (index < 2) return octet;
-                    if (index === 2) return (octet & (255 << (subnetMask - 8))) + ((randomHost >> 8) & 255);
-                    return (octet & (255 << subnetMask)) + (randomHost & 255);
-                });
-                return randomIP.join('.');
-            }
-
-            addresses = addresses.concat('127.0.0.1:1234#CFnat');
-            let counter = 1;
-            if (hostName.includes("worker") || hostName.includes("notls")) {
-                const randomPorts = httpPorts.concat('80');
-                addressesnotls = addressesnotls.concat(
-                    cfips.map(cidr => generateRandomIPFromCIDR(cidr) + ':' + randomPorts[Math.floor(Math.random() * randomPorts.length)] + '#CF随机节点' + String(counter++).padStart(2, '0'))
-                );
-            } else {
-                const randomPorts = httpsPorts.concat('443');
-                addresses = addresses.concat(
-                    cfips.map(cidr => generateRandomIPFromCIDR(cidr) + ':' + randomPorts[Math.floor(Math.random() * randomPorts.length)] + '#CF随机节点' + String(counter++).padStart(2, '0'))
-                );
-            }
+    } else if (env.KV) {
+        await 迁移地址列表(env);
+        const 优选地址列表 = await env.KV.get('ADD.txt');
+        if (优选地址列表) {
+            const 分类地址 = { 接口地址: new Set(), 链接地址: new Set(), 优选地址: new Set() };
+            (await 整理(优选地址列表)).forEach(元素 => {
+                if (元素.startsWith('https://')) 分类地址.接口地址.add(元素);
+                else if (元素.includes('://')) 分类地址.链接地址.add(元素);
+                else 分类地址.优选地址.add(元素);
+            });
+            addressesapi = [...分类地址.接口地址];
+            link = [...分类地址.链接地址];
+            addresses = [...分类地址.优选地址];
         }
     }
 
-    const uuid = (_url.pathname == `/${动态UUID}`) ? 动态UUID : userID;
+    if (addresses.length + addressesapi.length + addressesnotls.length + addressesnotlsapi.length + addressescsv.length === 0) {
+        const cfips = [
+            '103.21.244.0/24', '104.16.0.0/13', '104.24.0.0/14', '172.64.0.0/14',
+            '104.16.0.0/14', '104.24.0.0/15', '141.101.64.0/19', '188.114.96.0/21',
+            '190.93.240.0/21', '162.159.152.0/23'
+        ];
+
+        function generateRandomIP(cidr) {
+            const [base, mask] = cidr.split('/');
+            const subnetMask = 32 - parseInt(mask, 10);
+            const randomHost = Math.floor(Math.random() * (Math.pow(2, subnetMask) - 1));
+            return base.split('.').map((octet, i) => 
+                i < 2 ? octet : (parseInt(octet) & (255 << subnetMask)) + (randomHost >> (8 * (2 - i)) & 255)
+            ).join('.');
+        }
+
+        addresses.push('127.0.0.1:1234#CFnat');
+        const randomPorts = hostName.includes("worker") || hostName.includes("notls") ? [...httpPorts, '80'] : [...httpsPorts, '443'];
+        
+        cfips.forEach((cidr, i) => {
+            const ip = generateRandomIP(cidr);
+            const port = randomPorts[Math.floor(Math.random() * randomPorts.length)];
+            const target = hostName.includes("worker") || hostName.includes("notls") ? addressesnotls : addresses;
+            target.push(`${ip}:${port}#CF随机节点${String(i + 1).padStart(2, '0')}`);
+        });
+    }
+
+    const uuid = _url.pathname === `/${动态UUID}` ? 动态UUID : userID;
     const userAgent = UA.toLowerCase();
     const Config = 配置信息(userID, hostName);
-    const v2ray = Config[0];
-    const clash = Config[1];
+    const [v2ray, clash] = Config;
+    
     let proxyhost = "";
-    if (hostName.includes(".workers.dev")) {
-        if (proxyhostsURL && (!proxyhosts || proxyhosts.length == 0)) {
-            try {
-                const response = await fetch(proxyhostsURL);
-                if (!response.ok) return;
-                const text = await response.text();
-                const lines = text.split('\n');
-                const nonEmptyLines = lines.filter(line => line.trim() !== '');
-                proxyhosts = proxyhosts.concat(nonEmptyLines);
-            } catch (error) {}
+    if (hostName.includes(".workers.dev") && (!proxyhosts || proxyhosts.length === 0) && proxyhostsURL) {
+        try {
+            const response = await fetch(proxyhostsURL);
+            if (response.ok) {
+                proxyhosts = [...new Set((await response.text()).split('\n').filter(line => line.trim()))];
+            }
+        } catch (error) {
+            console.error('获取地址时出错:', error);
         }
-        if (proxyhosts.length != 0) proxyhost = proxyhosts[Math.floor(Math.random() * proxyhosts.length)] + "/";
     }
+    if (proxyhosts.length > 0) proxyhost = proxyhosts[Math.floor(Math.random() * proxyhosts.length)] + "/";
 
-    if (userAgent.includes('mozilla') && !subParams.some(_searchParams => _url.searchParams.has(_searchParams))) {
-        const newSocks5s = socks5s.map(socks5Address => {
-            if (socks5Address.includes('@')) return socks5Address.split('@')[1];
-            else if (socks5Address.includes('//')) return socks5Address.split('//')[1];
-            else return socks5Address;
-        });
-
+    if (userAgent.includes('mozilla') && !subParams.some(p => _url.searchParams.has(p))) {
+        const newSocks5s = socks5s.map(s => s.includes('@') ? s.split('@')[1] : s.includes('//') ? s.split('//')[1] : s);
         let socks5List = '';
+        
         if (go2Socks5s.length > 0 && enableSocks) {
-            socks5List = `${(enableHttp ? "HTTP" : "Socks5") + decodeURIComponent('%EF%BC%88%E7%99%BD%E5%90%8D%E5%8D%95%EF%BC%89%3A%20')}`;
-            if (go2Socks5s.includes(atob('YWxsIGlu')) || go2Socks5s.includes(atob('Kg=='))) socks5List += `${decodeURIComponent('%E6%89%80%E6%9C%89%E6%B5%81%E9%87%8F')}<br>`;
-            else socks5List += `<br>&nbsp;&nbsp;${go2Socks5s.join('<br>&nbsp;&nbsp;')}<br>`;
+            socks5List = `${enableHttp ? "HTTP" : "Socks5"}${decodeURIComponent('%EF%BC%88%E7%99%BD%E5%90%8D%E5%8D%95%EF%BC%89%3A%20')}`;
+            socks5List += go2Socks5s.includes(atob('YWxsIGlu')) || go2Socks5s.includes(atob('Kg==')) ? 
+                `${decodeURIComponent('%E6%89%80%E6%9C%89%E6%B5%81%E9%87%8F')}<br>` : 
+                `<br>&nbsp;&nbsp;${go2Socks5s.join('<br>&nbsp;&nbsp;')}<br>`;
         }
 
         let 订阅器 = '<br>';
         if (sub) {
-            if (enableSocks) 订阅器 += `CFCDN（访问方式）: ${enableHttp ? "HTTP" : "Socks5"}<br>&nbsp;&nbsp;${newSocks5s.join('<br>&nbsp;&nbsp;')}<br>${socks5List}`;
-            else if (proxyIP && proxyIP != '') 订阅器 += `CFCDN（访问方式）: ProxyIP<br>&nbsp;&nbsp;${proxyIPs.join('<br>&nbsp;&nbsp;')}<br>`;
-            else if (RproxyIP == 'true') 订阅器 += `CFCDN（访问方式）: 自动获取ProxyIP<br>`;
-            else 订阅器 += `CFCDN（访问方式）: 无法访问, 需要您设置 proxyIP/PROXYIP ！！！<br>`
+            订阅器 += enableSocks ? 
+                `CFCDN（访问方式）: ${enableHttp ? "HTTP" : "Socks5"}<br>&nbsp;&nbsp;${newSocks5s.join('<br>&nbsp;&nbsp;')}<br>${socks5List}` : 
+                proxyIP && proxyIP !== '' ? 
+                    `CFCDN（访问方式）: ProxyIP<br>&nbsp;&nbsp;${proxyIPs.join('<br>&nbsp;&nbsp;')}<br>` : 
+                    RproxyIP === 'true' ? 
+                        `CFCDN（访问方式）: 自动获取ProxyIP<br>` : 
+                        `CFCDN（访问方式）: 无法访问, 需要您设置 proxyIP/PROXYIP ！！！<br>`;
             订阅器 += `<br>SUB（优选订阅生成器）: ${sub}`;
         } else {
-            if (enableSocks) 订阅器 += `CFCDN（访问方式）: ${enableHttp ? "HTTP" : "Socks5"}<br>&nbsp;&nbsp;${newSocks5s.join('<br>&nbsp;&nbsp;')}<br>${socks5List}`;
-            else if (proxyIP && proxyIP != '') 订阅器 += `CFCDN（访问方式）: ProxyIP<br>&nbsp;&nbsp;${proxyIPs.join('<br>&nbsp;&nbsp;')}<br>`;
-            else 订阅器 += `CFCDN（访问方式）: 无法访问, 需要您设置 proxyIP/PROXYIP ！！！<br>`;
-            let 判断是否绑定KV空间 = '';
-            if (env.KV) 判断是否绑定KV空间 = ` <a href='${_url.pathname}/edit'>编辑优选列表</a>`;
-            订阅器 += `<br>您的订阅内容由 内置 addresses/ADD* 参数变量提供${判断是否绑定KV空间}<br>`;
+            订阅器 += enableSocks ? 
+                `CFCDN（访问方式）: ${enableHttp ? "HTTP" : "Socks5"}<br>&nbsp;&nbsp;${newSocks5s.join('<br>&nbsp;&nbsp;')}<br>${socks5List}` : 
+                proxyIP && proxyIP !== '' ? 
+                    `CFCDN（访问方式）: ProxyIP<br>&nbsp;&nbsp;${proxyIPs.join('<br>&nbsp;&nbsp;')}<br>` : 
+                    `CFCDN（访问方式）: 无法访问, 需要您设置 proxyIP/PROXYIP ！！！<br>`;
+            
+            if (env.KV) 订阅器 += ` <a href='${_url.pathname}/edit'>编辑优选列表</a>`;
+            订阅器 += `<br>您的订阅内容由 内置 addresses/ADD* 参数变量提供${env.KV ? ` <a href='${_url.pathname}/edit'>编辑优选列表</a>` : ''}<br>`;
+            
             if (addresses.length > 0) 订阅器 += `ADD（TLS优选域名&IP）: <br>&nbsp;&nbsp;${addresses.join('<br>&nbsp;&nbsp;')}<br>`;
             if (addressesnotls.length > 0) 订阅器 += `ADDNOTLS（noTLS优选域名&IP）: <br>&nbsp;&nbsp;${addressesnotls.join('<br>&nbsp;&nbsp;')}<br>`;
             if (addressesapi.length > 0) 订阅器 += `ADDAPI（TLS优选域名&IP 的 API）: <br>&nbsp;&nbsp;${addressesapi.join('<br>&nbsp;&nbsp;')}<br>`;
@@ -951,160 +906,45 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
 
         if (动态UUID && _url.pathname !== `/${动态UUID}`) 订阅器 = '';
         else 订阅器 += `<br>SUBAPI（订阅转换后端）: ${subProtocol}://${subConverter}<br>SUBCONFIG（订阅转换配置文件）: ${subConfig}`;
-        const 动态UUID信息 = (uuid != userID) ? `TOKEN: ${uuid}<br>UUIDNow: ${userID}<br>UUIDLow: ${userIDLow}<br>${userIDTime}TIME（动态UUID有效时间）: ${有效时间} 天<br>UPTIME（动态UUID更新时间）: ${更新时间} 时（北京时间）<br><br>` : `${userIDTime}`;
-        const 节点配置页 = `
-            ################################################################<br>
-            Subscribe / sub 订阅地址, 点击链接自动 <strong>复制订阅链接</strong> 并 <strong>生成订阅二维码</strong> <br>
-            ---------------------------------------------------------------<br>
-            自适应订阅地址:<br>
-            <a href="javascript:void(0)" onclick="copyToClipboard('https://${proxyhost}${hostName}/${uuid}?sub','qrcode_0')" style="color:blue;text-decoration:underline;cursor:pointer;">https://${proxyhost}${hostName}/${uuid}</a><br>
-            <div id="qrcode_0" style="margin: 10px 10px 10px 10px;"></div>
-            Base64订阅地址:<br>
-            <a href="javascript:void(0)" onclick="copyToClipboard('https://${proxyhost}${hostName}/${uuid}?b64','qrcode_1')" style="color:blue;text-decoration:underline;cursor:pointer;">https://${proxyhost}${hostName}/${uuid}?b64</a><br>
-            <div id="qrcode_1" style="margin: 10px 10px 10px 10px;"></div>
-            clash订阅地址:<br>
-            <a href="javascript:void(0)" onclick="copyToClipboard('https://${proxyhost}${hostName}/${uuid}?clash','qrcode_2')" style="color:blue;text-decoration:underline;cursor:pointer;">https://${proxyhost}${hostName}/${uuid}?clash</a><br>
-            <div id="qrcode_2" style="margin: 10px 10px 10px 10px;"></div>
-            singbox订阅地址:<br>
-            <a href="javascript:void(0)" onclick="copyToClipboard('https://${proxyhost}${hostName}/${uuid}?sb','qrcode_3')" style="color:blue;text-decoration:underline;cursor:pointer;">https://${proxyhost}${hostName}/${uuid}?sb</a><br>
-            <div id="qrcode_3" style="margin: 10px 10px 10px 10px;"></div>
-            loon订阅地址:<br>
-            <a href="javascript:void(0)" onclick="copyToClipboard('https://${proxyhost}${hostName}/${uuid}?loon','qrcode_5')" style="color:blue;text-decoration:underline;cursor:pointer;">https://${proxyhost}${hostName}/${uuid}?loon</a><br>
-            <div id="qrcode_5" style="margin: 10px 10px 10px 10px;"></div>
-            <strong><a href="javascript:void(0);" id="noticeToggle" onclick="toggleNotice()">实用订阅技巧∨</a></strong><br>
-                <div id="noticeContent" class="notice-content" style="display: none;">
-                    <strong>1.</strong> 如您使用的是 PassWall、PassWall2 路由插件，订阅编辑的 <strong>用户代理(User-Agent)</strong> 设置为 <strong>PassWall</strong> 即可；<br>
-                    <br>
-                    <strong>2.</strong> 如您使用的是 SSR+ 路由插件，推荐使用 <strong>Base64订阅地址</strong> 进行订阅；<br>
-                    <br>
-                    <strong>3.</strong> 快速切换 <a href='${atob('aHR0cHM6Ly9naXRodWIuY29tL2NtbGl1L1dvcmtlclZsZXNzMnN1Yg==')}'>优选订阅生成器</a> 至：sub.google.com，您可将"?sub=sub.google.com"参数添加到链接末尾，例如：<br>
-                    &nbsp;&nbsp;https://${proxyhost}${hostName}/${uuid}<strong>?sub=sub.google.com</strong><br>
-                    <br>
-                    <strong>4.</strong> 快速更换 PROXYIP 至：proxyip.cmliussss.net:443，您可将"?proxyip=proxyip.cmliussss.net:443"参数添加到链接末尾，例如：<br>
-                    &nbsp;&nbsp; https://${proxyhost}${hostName}/${uuid}<strong>?proxyip=proxyip.cmliussss.net:443</strong><br>
-                    <br>
-                    <strong>5.</strong> 快速更换 SOCKS5 至：user:password@127.0.0.1:1080，您可将"?socks5=user:password@127.0.0.1:1080"参数添加到链接末尾，例如：<br>
-                    &nbsp;&nbsp;https://${proxyhost}${hostName}/${uuid}<strong>?socks5=user:password@127.0.0.1:1080</strong><br>
-                    <br>
-                    <strong>6.</strong> 如需指定多个参数则需要使用'&'做间隔，例如：<br>
-                    &nbsp;&nbsp;https://${proxyhost}${hostName}/${uuid}?sub=sub.google.com<strong>&</strong>proxyip=proxyip.cmliussss.net<br>
-                </div>
-            <script src="https://cdn.jsdelivr.net/npm/@keeex/qrcodejs-kx@1.0.2/qrcode.min.js"></script>
-            <script>
-            function copyToClipboard(text, qrcode) {
-                navigator.clipboard.writeText(text).then(() => {
-                    alert('已复制到剪贴板');
-                }).catch(err => {
-                    console.error('复制失败:', err);
-                });
-                const qrcodeDiv = document.getElementById(qrcode);
-                qrcodeDiv.innerHTML = '';
-                new QRCode(qrcodeDiv, {
-                    text: text,
-                    width: 220,
-                    height: 220,
-                    colorDark: "#000000",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.Q,
-                    scale: 1
-                });
-            }
+        
+        const 动态UUID信息 = uuid !== userID ? 
+            `TOKEN: ${uuid}<br>UUIDNow: ${userID}<br>UUIDLow: ${userIDLow}<br>${userIDTime}TIME（动态UUID有效时间）: ${有效时间} 天<br>UPTIME（动态UUID更新时间）: ${更新时间} 时（北京时间）<br><br>` : 
+            `${userIDTime}`;
 
-            function toggleNotice() {
-                const noticeContent = document.getElementById('noticeContent');
-                const noticeToggle = document.getElementById('noticeToggle');
-                if (noticeContent.style.display === 'none') {
-                    noticeContent.style.display = 'block';
-                    noticeToggle.textContent = '实用订阅技巧∧';
-                } else {
-                    noticeContent.style.display = 'none'; 
-                    noticeToggle.textContent = '实用订阅技巧∨';
-                }
-            }
-            </script>
-            ---------------------------------------------------------------<br>
-            ################################################################<br>
-            ${FileName} 配置信息<br>
-            ---------------------------------------------------------------<br>
-            ${动态UUID信息}HOST: ${hostName}<br>
-            UUID: ${userID}<br>
-            FKID: ${fakeUserID}<br>
-            UA: ${UA}<br>
-            SCV（跳过TLS证书验证）: ${SCV}<br>
-            ${订阅器}<br>
-            ---------------------------------------------------------------<br>
-            ################################################################<br>
-            v2ray<br>
-            ---------------------------------------------------------------<br>
-            <a href="javascript:void(0)" onclick="copyToClipboard('${v2ray}','qrcode_v2ray')" style="color:blue;text-decoration:underline;cursor:pointer;">${v2ray}</a><br>
-            <div id="qrcode_v2ray" style="margin: 10px 10px 10px 10px;"></div>
-            ---------------------------------------------------------------<br>
-            ################################################################<br>
-            clash-meta<br>
-            ---------------------------------------------------------------<br>
-            ${clash}<br>
-            ---------------------------------------------------------------<br>
-            ################################################################<br>
-            ${cmad}
-            `;
-        return `<div style="font-size:13px;">${节点配置页}</div>`;
+        return `<div style="font-size:13px;">${生成配置页面(proxyhost, hostName, uuid, v2ray, clash, 订阅器, 动态UUID信息, userID, UA)}</div>`;
     } else {
-        if (typeof fetch != 'function') {
-            return 'Error: fetch is not available in this environment.';
-        }
+        if (typeof fetch !== 'function') return 'Error: fetch is not available in this environment.';
 
-        let newAddressesapi = [];
-        let newAddressescsv = [];
-        let newAddressesnotlsapi = [];
-        let newAddressesnotlscsv = [];
-
+        let newAddressesapi = [], newAddressescsv = [], newAddressesnotlsapi = [], newAddressesnotlscsv = [];
+        let noTLS = 'false';
+        
         if (hostName.includes(".workers.dev")) {
             noTLS = 'true';
             fakeHostName = `${fakeHostName}.workers.dev`;
-            newAddressesnotlsapi = await 整理优选列表(addressesnotlsapi);
-            newAddressesnotlscsv = await 整理测速结果('FALSE');
+            [newAddressesnotlsapi, newAddressesnotlscsv] = await Promise.all([
+                整理优选列表(addressesnotlsapi),
+                整理测速结果('FALSE')
+            ]);
         } else if (hostName.includes(".pages.dev")) {
             fakeHostName = `${fakeHostName}.pages.dev`;
-        } else if (hostName.includes("worker") || hostName.includes("notls") || noTLS == 'true') {
+        } else if (hostName.includes("worker") || hostName.includes("notls") || noTLS === 'true') {
             noTLS = 'true';
             fakeHostName = `notls${fakeHostName}.net`;
-            newAddressesnotlsapi = await 整理优选列表(addressesnotlsapi);
-            newAddressesnotlscsv = await 整理测速结果('FALSE');
+            [newAddressesnotlsapi, newAddressesnotlscsv] = await Promise.all([
+                整理优选列表(addressesnotlsapi),
+                整理测速结果('FALSE')
+            ]);
         } else {
-            fakeHostName = `${fakeHostName}.xyz`
+            fakeHostName = `${fakeHostName}.xyz`;
         }
-        console.log(`虚假HOST: ${fakeHostName}`);
-        let url = `${subProtocol}://${sub}/sub?host=${fakeHostName}&uuid=${fakeUserID + atob('JmVkZ2V0dW5uZWw9Y21saXUmcHJveHlpcD0=') + RproxyIP}&path=${encodeURIComponent(path)}`;
+
+        let url = sub ? 
+            `${subProtocol}://${sub}/sub?host=${fakeHostName}&uuid=${fakeUserID}${atob('JmVkZ2V0dW5uZWw9Y21saXUmcHJveHlpcD0')}${RproxyIP}&path=${encodeURIComponent(path)}` : 
+            `https://${hostName}/${fakeUserID}${_url.search}${(hostName.includes("worker") || hostName.includes("notls") || noTLS === 'true') ? (_url.search ? '&notls' : '?notls') : ''}`;
+        
         let isBase64 = true;
 
-        if (!sub || sub == "") {
-            if (hostName.includes('workers.dev')) {
-                if (proxyhostsURL && (!proxyhosts || proxyhosts.length == 0)) {
-                    try {
-                        const response = await fetch(proxyhostsURL);
-                        if (!response.ok) return;
-                        const text = await response.text();
-                        const lines = text.split('\n');
-                        const nonEmptyLines = lines.filter(line => line.trim() !== '');
-                        proxyhosts = proxyhosts.concat(nonEmptyLines);
-                    } catch (error) {
-                        console.error('获取地址时出错:', error);
-                    }
-                }
-                proxyhosts = [...new Set(proxyhosts)];
-            }
-
-            newAddressesapi = await 整理优选列表(addressesapi);
-            newAddressescsv = await 整理测速结果('TRUE');
-            url = `https://${hostName}/${fakeUserID + _url.search}`;
-            if (hostName.includes("worker") || hostName.includes("notls") || noTLS == 'true') {
-                if (_url.search) url += '&notls';
-                else url += '?notls';
-            }
-            console.log(`虚假订阅: ${url}`);
-        }
-
-        if (!userAgent.includes(('CF-Workers-SUB').toLowerCase()) && !_url.searchParams.has('b64') && !_url.searchParams.has('base64')) {
+        if (!userAgent.includes('CF-Workers-SUB'.toLowerCase()) && !_url.searchParams.has('b64') && !_url.searchParams.has('base64')) {
             if ((userAgent.includes('clash') && !userAgent.includes('nekobox')) || (_url.searchParams.has('clash') && !userAgent.includes('subconverter'))) {
                 url = `${subProtocol}://${subConverter}/sub?target=clash&url=${encodeURIComponent(url)}&insert=false&config=${encodeURIComponent(subConfig)}&emoji=${subEmoji}&list=false&tfo=false&scv=${SCV}&fdn=false&sort=false&new_name=true`;
                 isBase64 = false;
@@ -1119,19 +959,16 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
 
         try {
             let content;
-            if ((!sub || sub == "") && isBase64 == true) {
+            if (!sub && isBase64) {
                 content = await 生成本地订阅(fakeHostName, fakeUserID, noTLS, newAddressesapi, newAddressescsv, newAddressesnotlsapi, newAddressesnotlscsv);
             } else {
                 const response = await fetch(url, {
-                    headers: {
-                        'User-Agent': UA + atob('IENGLVdvcmtlcnMtZWRnZXR1bm5lbC9jbWxpdQ==')
-                    }
+                    headers: { 'User-Agent': UA + atob('IENGLVdvcmtlcnMtZWRnZXR1bm5lbC9jbWxpdQ==') }
                 });
                 content = await response.text();
             }
 
-            if (_url.pathname == `/${fakeUserID}`) return content;
-            return 恢复伪装信息(content, userID, hostName, fakeUserID, fakeHostName, isBase64);
+            return _url.pathname === `/${fakeUserID}` ? content : 恢复伪装信息(content, userID, hostName, fakeUserID, fakeHostName, isBase64);
         } catch (error) {
             console.error('Error fetching content:', error);
             return `Error fetching content: ${error.message}`;
@@ -1139,37 +976,129 @@ async function 生成配置信息(userID, hostName, sub, UA, RproxyIP, _url, fak
     }
 }
 
+function 生成配置页面(proxyhost, hostName, uuid, v2ray, clash, 订阅器, 动态UUID信息, userID, UA) {
+    return `
+        ################################################################<br>
+        Subscribe / sub 订阅地址, 点击链接自动 <strong>复制订阅链接</strong> 并 <strong>生成订阅二维码</strong> <br>
+        ---------------------------------------------------------------<br>
+        自适应订阅地址:<br>
+        <a href="javascript:void(0)" onclick="copyToClipboard('https://${proxyhost}${hostName}/${uuid}?sub','qrcode_0')" style="color:blue;text-decoration:underline;cursor:pointer;">https://${proxyhost}${hostName}/${uuid}</a><br>
+        <div id="qrcode_0" style="margin: 10px 10px 10px 10px;"></div>
+        Base64订阅地址:<br>
+        <a href="javascript:void(0)" onclick="copyToClipboard('https://${proxyhost}${hostName}/${uuid}?b64','qrcode_1')" style="color:blue;text-decoration:underline;cursor:pointer;">https://${proxyhost}${hostName}/${uuid}?b64</a><br>
+        <div id="qrcode_1" style="margin: 10px 10px 10px 10px;"></div>
+        clash订阅地址:<br>
+        <a href="javascript:void(0)" onclick="copyToClipboard('https://${proxyhost}${hostName}/${uuid}?clash','qrcode_2')" style="color:blue;text-decoration:underline;cursor:pointer;">https://${proxyhost}${hostName}/${uuid}?clash</a><br>
+        <div id="qrcode_2" style="margin: 10px 10px 10px 10px;"></div>
+        singbox订阅地址:<br>
+        <a href="javascript:void(0)" onclick="copyToClipboard('https://${proxyhost}${hostName}/${uuid}?sb','qrcode_3')" style="color:blue;text-decoration:underline;cursor:pointer;">https://${proxyhost}${hostName}/${uuid}?sb</a><br>
+        <div id="qrcode_3" style="margin: 10px 10px 10px 10px;"></div>
+        loon订阅地址:<br>
+        <a href="javascript:void(0)" onclick="copyToClipboard('https://${proxyhost}${hostName}/${uuid}?loon','qrcode_5')" style="color:blue;text-decoration:underline;cursor:pointer;">https://${proxyhost}${hostName}/${uuid}?loon</a><br>
+        <div id="qrcode_5" style="margin: 10px 10px 10px 10px;"></div>
+        <strong><a href="javascript:void(0);" id="noticeToggle" onclick="toggleNotice()">实用订阅技巧∨</a></strong><br>
+        <div id="noticeContent" class="notice-content" style="display: none;">
+            <strong>1.</strong> 如您使用的是 PassWall、PassWall2 路由插件，订阅编辑的 <strong>用户代理(User-Agent)</strong> 设置为 <strong>PassWall</strong> 即可；<br>
+            <br>
+            <strong>2.</strong> 如您使用的是 SSR+ 路由插件，推荐使用 <strong>Base64订阅地址</strong> 进行订阅；<br>
+            <br>
+            <strong>3.</strong> 快速切换 <a href='${atob('aHR0cHM6Ly9naXRodWIuY29tL2NtbGl1L1dvcmtlclZsZXNzMnN1Yg==')}'>优选订阅生成器</a> 至：sub.google.com，您可将"?sub=sub.google.com"参数添加到链接末尾，例如：<br>
+            &nbsp;&nbsp;https://${proxyhost}${hostName}/${uuid}<strong>?sub=sub.google.com</strong><br>
+            <br>
+            <strong>4.</strong> 快速更换 PROXYIP 至：proxyip.cmliussss.net:443，您可将"?proxyip=proxyip.cmliussss.net:443"参数添加到链接末尾，例如：<br>
+            &nbsp;&nbsp; https://${proxyhost}${hostName}/${uuid}<strong>?proxyip=proxyip.cmliussss.net:443</strong><br>
+            <br>
+            <strong>5.</strong> 快速更换 SOCKS5 至：user:password@127.0.0.1:1080，您可将"?socks5=user:password@127.0.0.1:1080"参数添加到链接末尾，例如：<br>
+            &nbsp;&nbsp;https://${proxyhost}${hostName}/${uuid}<strong>?socks5=user:password@127.0.0.1:1080</strong><br>
+            <br>
+            <strong>6.</strong> 如需指定多个参数则需要使用'&'做间隔，例如：<br>
+            &nbsp;&nbsp;https://${proxyhost}${hostName}/${uuid}?sub=sub.google.com<strong>&</strong>proxyip=proxyip.cmliussss.net<br>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/@keeex/qrcodejs-kx@1.0.2/qrcode.min.js"></script>
+        <script>
+        function copyToClipboard(text, qrcode) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('已复制到剪贴板');
+            }).catch(err => {
+                console.error('复制失败:', err);
+            });
+            const qrcodeDiv = document.getElementById(qrcode);
+            qrcodeDiv.innerHTML = '';
+            new QRCode(qrcodeDiv, {
+                text: text,
+                width: 220,
+                height: 220,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.Q,
+                scale: 1
+            });
+        }
+
+        function toggleNotice() {
+            const noticeContent = document.getElementById('noticeContent');
+            const noticeToggle = document.getElementById('noticeToggle');
+            if (noticeContent.style.display === 'none') {
+                noticeContent.style.display = 'block';
+                noticeToggle.textContent = '实用订阅技巧∧';
+            } else {
+                noticeContent.style.display = 'none'; 
+                noticeToggle.textContent = '实用订阅技巧∨';
+            }
+        }
+        </script>
+        ---------------------------------------------------------------<br>
+        ################################################################<br>
+        ${FileName} 配置信息<br>
+        ---------------------------------------------------------------<br>
+        ${动态UUID信息}HOST: ${hostName}<br>
+        UUID: ${userID}<br>
+        FKID: ${fakeUserID}<br>
+        UA: ${UA}<br>
+        SCV（跳过TLS证书验证）: ${SCV}<br>
+        ${订阅器}<br>
+        ---------------------------------------------------------------<br>
+        ################################################################<br>
+        v2ray<br>
+        ---------------------------------------------------------------<br>
+        <a href="javascript:void(0)" onclick="copyToClipboard('${v2ray}','qrcode_v2ray')" style="color:blue;text-decoration:underline;cursor:pointer;">${v2ray}</a><br>
+        <div id="qrcode_v2ray" style="margin: 10px 10px 10px 10px;"></div>
+        ---------------------------------------------------------------<br>
+        ################################################################<br>
+        clash-meta<br>
+        ---------------------------------------------------------------<br>
+        ${clash}<br>
+        ---------------------------------------------------------------<br>
+        ################################################################<br>
+        ${cmad}
+    `;
+}
+
 async function 整理优选列表(api) {
     if (!api || api.length === 0) return [];
-    let newapi = "";
     const controller = new AbortController();
-    const timeout = setTimeout(() => {
-        controller.abort();
-    }, 2000);
+    const timeout = setTimeout(() => controller.abort(), 2000);
+    let newapi = "";
 
     try {
-        const responses = await Promise.allSettled(api.map(apiUrl => fetch(apiUrl, {
-            method: 'get',
-            headers: {
-                'Accept': 'text/html,application/xhtml+xml,application/xml;',
-                'User-Agent': atob('Q0YtV29ya2Vycy1lZGdldHVubmVsL2NtbGl1')
-            },
-            signal: controller.signal
-        }).then(response => response.ok ? response.text() : Promise.reject()));
+        const responses = await Promise.allSettled(api.map(apiUrl => 
+            fetch(apiUrl, {
+                method: 'get',
+                headers: { 'Accept': 'text/html,application/xhtml+xml,application/xml;', 'User-Agent': atob('Q0YtV29ya2Vycy1lZGdldHVubmVsL2NtbGl1') },
+                signal: controller.signal
+            }).then(response => response.ok ? response.text() : Promise.reject())
+        ));
 
         for (const [index, response] of responses.entries()) {
             if (response.status === 'fulfilled') {
                 const content = await response.value;
                 const lines = content.split(/\r?\n/);
-                let 节点备注 = '';
-                let 测速端口 = '443';
-
+                
                 if (lines[0].split(',').length > 3) {
                     const idMatch = api[index].match(/id=([^&]*)/);
-                    if (idMatch) 节点备注 = idMatch[1];
-
                     const portMatch = api[index].match(/port=([^&]*)/);
-                    if (portMatch) 测速端口 = portMatch[1];
+                    const 节点备注 = idMatch ? idMatch[1] : '';
+                    const 测速端口 = portMatch ? portMatch[1] : '443';
 
                     for (let i = 1; i < lines.length; i++) {
                         const columns = lines[i].split(',')[0];
@@ -1182,15 +1111,8 @@ async function 整理优选列表(api) {
                     if (api[index].includes('proxyip=true')) {
                         proxyIPPool = proxyIPPool.concat((await 整理(content)).map(item => {
                             const baseItem = item.split('#')[0] || item;
-                            if (baseItem.includes(':')) {
-                                const port = baseItem.split(':')[1];
-                                if (!httpsPorts.includes(port)) {
-                                    return baseItem;
-                                }
-                            } else {
-                                return `${baseItem}:443`;
-                            }
-                            return null;
+                            return baseItem.includes(':') && !httpsPorts.includes(baseItem.split(':')[1]) ? baseItem : 
+                                   !baseItem.includes(':') ? `${baseItem}:443` : null;
                         }).filter(Boolean));
                     }
                     newapi += content + '\n';
@@ -1203,54 +1125,36 @@ async function 整理优选列表(api) {
         clearTimeout(timeout);
     }
 
-    const newAddressesapi = await 整理(newapi);
-    return newAddressesapi;
+    return await 整理(newapi);
 }
 
 async function 整理测速结果(tls) {
-    if (!addressescsv || addressescsv.length === 0) {
-        return [];
-    }
-
+    if (!addressescsv || addressescsv.length === 0) return [];
     let newAddressescsv = [];
 
     for (const csvUrl of addressescsv) {
         try {
             const response = await fetch(csvUrl);
             if (!response.ok) continue;
-            const text = await response.text();
-            let lines;
-            if (text.includes('\r\n')) {
-                lines = text.split('\r\n');
-            } else {
-                lines = text.split('\n');
-            }
 
+            const text = await response.text();
+            const lines = text.includes('\r\n') ? text.split('\r\n') : text.split('\n');
             const header = lines[0].split(',');
             const tlsIndex = header.indexOf('TLS');
-            const ipAddressIndex = 0;
-            const portIndex = 1;
-            const dataCenterIndex = tlsIndex + remarkIndex;
-
             if (tlsIndex === -1) continue;
 
             for (let i = 1; i < lines.length; i++) {
                 const columns = lines[i].split(',');
-                const speedIndex = columns.length - 1;
-                if (columns[tlsIndex].toUpperCase() === tls && parseFloat(columns[speedIndex]) > DLS) {
-                    const ipAddress = columns[ipAddressIndex];
-                    const port = columns[portIndex];
-                    const dataCenter = columns[dataCenterIndex];
-                    const formattedAddress = `${ipAddress}:${port}#${dataCenter}`;
+                if (columns[tlsIndex].toUpperCase() === tls && parseFloat(columns[columns.length - 1]) > DLS) {
+                    const formattedAddress = `${columns[0]}:${columns[1]}#${columns[tlsIndex + remarkIndex]}`;
                     newAddressescsv.push(formattedAddress);
-                    if (csvUrl.includes('proxyip=true') && columns[tlsIndex].toUpperCase() == 'true' && !httpsPorts.includes(port)) {
-                        proxyIPPool.push(`${ipAddress}:${port}`);
+                    if (csvUrl.includes('proxyip=true') && columns[tlsIndex].toUpperCase() === 'true' && !httpsPorts.includes(columns[1])) {
+                        proxyIPPool.push(`${columns[0]}:${columns[1]}`);
                     }
                 }
             }
         } catch (error) {
             console.error('获取CSV地址时出错:', error);
-            continue;
         }
     }
 
@@ -1259,142 +1163,64 @@ async function 整理测速结果(tls) {
 
 function 生成本地订阅(host, UUID, noTLS, newAddressesapi, newAddressescsv, newAddressesnotlsapi, newAddressesnotlscsv) {
     const regex = /^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|\[.*\]):?(\d+)?#?(.*)?$/;
-    addresses = addresses.concat(newAddressesapi);
-    addresses = addresses.concat(newAddressescsv);
-    let notlsresponseBody;
-    if (noTLS == 'true') {
-        addressesnotls = addressesnotls.concat(newAddressesnotlsapi);
-        addressesnotls = addressesnotls.concat(newAddressesnotlscsv);
-        const uniqueAddressesnotls = [...new Set(addressesnotls)];
-
-        notlsresponseBody = uniqueAddressesnotls.map(address => {
-            let port = "-1";
-            let addressid = address;
-
-            const match = addressid.match(regex);
-            if (!match) {
-                if (address.includes(':') && address.includes('#')) {
-                    const parts = address.split(':');
-                    address = parts[0];
-                    const subParts = parts[1].split('#');
-                    port = subParts[0];
-                    addressid = subParts[1];
-                } else if (address.includes(':')) {
-                    const parts = address.split(':');
-                    address = parts[0];
-                    port = parts[1];
-                } else if (address.includes('#')) {
-                    const parts = address.split('#');
-                    address = parts[0];
-                    addressid = parts[1];
-                }
-
-                if (addressid.includes(':')) {
-                    addressid = addressid.split(':')[0];
-                }
-            } else {
-                address = match[1];
-                port = match[2] || port;
-                addressid = match[3] || address;
+    addresses = [...new Set([...addresses, ...newAddressesapi, ...newAddressescsv])];
+    
+    let notlsresponseBody = '';
+    if (noTLS === 'true') {
+        addressesnotls = [...new Set([...addressesnotls, ...newAddressesnotlsapi, ...newAddressesnotlscsv])];
+        notlsresponseBody = addressesnotls.map(address => {
+            let [ip, port = "80", remark = ""] = address.match(regex) ? 
+                [RegExp.$1, RegExp.$2 || "80", RegExp.$3 || ""] : 
+                address.includes('#') ? 
+                    address.split('#').map((part, i) => i === 0 ? part.split(':') : part).flat() : 
+                    address.split(':');
+            
+            if (!isValidIPv4(ip) && port === "80") {
+                port = httpPorts.find(p => ip.includes(p)) || "80";
             }
 
-            if (!isValidIPv4(address) && port == "-1") {
-                for (let httpPort of httpPorts) {
-                    if (address.includes(httpPort)) {
-                        port = httpPort;
-                        break;
-                    }
-                }
-            }
-            if (port == "-1") port = "80";
-
-            let 伪装域名 = host;
-            let 最终路径 = path;
-            let 节点备注 = '';
-            const 协议类型 = atob(啥啥啥_写的这是啥啊);
-
-            const 维列斯Link = `${协议类型}://${UUID}@${address}:${port + atob('P2VuY3J5cHRpb249bm9uZSZzZWN1cml0eT0mdHlwZT13cyZob3N0PQ==') + 伪装域名}&path=${encodeURIComponent(最终路径)}#${encodeURIComponent(addressid + 节点备注)}`;
-
-            return 维列斯Link;
+            return `${atob(啥啥啥_写的这是啥啊)}://${UUID}@${ip}:${port}?encryption=none&security=&type=ws&host=${host}&path=${encodeURIComponent(path)}#${encodeURIComponent(remark)}`;
         }).join('\n');
     }
 
-    const uniqueAddresses = [...new Set(addresses)];
-    const responseBody = uniqueAddresses.map(address => {
-        let port = "-1";
-        let addressid = address;
-
-        const match = addressid.match(regex);
-        if (!match) {
-            if (address.includes(':') && address.includes('#')) {
-                const parts = address.split(':');
-                address = parts[0];
-                const subParts = parts[1].split('#');
-                port = subParts[0];
-                addressid = subParts[1];
-            } else if (address.includes(':')) {
-                const parts = address.split(':');
-                address = parts[0];
-                port = parts[1];
-            } else if (address.includes('#')) {
-                const parts = address.split('#');
-                address = parts[0];
-                addressid = parts[1];
-            }
-
-            if (addressid.includes(':')) {
-                addressid = addressid.split(':')[0];
-            }
-        } else {
-            address = match[1];
-            port = match[2] || port;
-            addressid = match[3] || address;
+    const responseBody = addresses.map(address => {
+        let [ip, port = "443", remark = ""] = address.match(regex) ? 
+            [RegExp.$1, RegExp.$2 || "443", RegExp.$3 || ""] : 
+            address.includes('#') ? 
+                address.split('#').map((part, i) => i === 0 ? part.split(':') : part).flat() : 
+                address.split(':');
+        
+        if (!isValidIPv4(ip) && port === "443") {
+            port = httpsPorts.find(p => ip.includes(p)) || "443";
         }
 
-        if (!isValidIPv4(address) && port == "-1") {
-            for (let httpsPort of httpsPorts) {
-                if (address.includes(httpsPort)) {
-                    port = httpsPort;
-                    break;
-                }
-            }
-        }
-        if (port == "-1") port = "443";
-
-        let 伪装域名 = host;
-        let 最终路径 = path;
-        let 节点备注 = '';
-        const matchingProxyIP = proxyIPPool.find(proxyIP => proxyIP.includes(address));
-        if (matchingProxyIP) 最终路径 = `/proxyip=${matchingProxyIP}`;
-
-        if (proxyhosts.length > 0 && (伪装域名.includes('.workers.dev'))) {
-            最终路径 = `/${伪装域名}${最终路径}`;
-            伪装域名 = proxyhosts[Math.floor(Math.random() * proxyhosts.length)];
-            节点备注 = ` 已启用临时域名中转服务，请尽快绑定自定义域！`;
+        const matchingProxyIP = proxyIPPool.find(proxyIP => proxyIP.includes(ip));
+        let 最终路径 = matchingProxyIP ? `/proxyip=${matchingProxyIP}` : path;
+        
+        if (proxyhosts.length > 0 && host.includes('.workers.dev')) {
+            最终路径 = `/${host}${最终路径}`;
+            remark += ` 已启用临时域名中转服务，请尽快绑定自定义域！`;
+            host = proxyhosts[Math.floor(Math.random() * proxyhosts.length)];
         }
 
-        const 协议类型 = atob(啥啥啥_写的这是啥啊);
-        const 维列斯Link = `${协议类型}://${UUID}@${address}:${port + atob('P2VuY3J5cHRpb249bm9uZSZzZWN1cml0eT10bHMmc25pPQ==') + 伪装域名}&fp=random&type=ws&host=${伪装域名}&path=${encodeURIComponent(最终路径) + allowInsecure}&fragment=1,40-60,30-50,tlshello#${encodeURIComponent(addressid + 节点备注)}`;
-
-        return 维列斯Link;
+        return `${atob(啥啥啥_写的这是啥啊)}://${UUID}@${ip}:${port}?encryption=none&security=tls&sni=${host}&fp=random&type=ws&host=${host}&path=${encodeURIComponent(最终路径)}${allowInsecure}&fragment=1,40-60,30-50,tlshello#${encodeURIComponent(remark)}`;
     }).join('\n');
 
     let base64Response = responseBody;
-    if (noTLS == 'true') base64Response += `\n${notlsresponseBody}`;
+    if (noTLS === 'true') base64Response += `\n${notlsresponseBody}`;
     if (link.length > 0) base64Response += '\n' + link.join('\n');
     return btoa(base64Response);
 }
 
 async function 整理(内容) {
-    var 替换后的内容 = 内容.replace(/[	|"'\r\n]+/g, ',').replace(/,+/g, ',');
-    if (替换后的内容.charAt(0) == ',') 替换后的内容 = 替换后的内容.slice(1);
-    if (替换后的内容.charAt(替换后的内容.length - 1) == ',') 替换后的内容 = 替换后的内容.slice(0, 替换后的内容.length - 1);
-    return 替换后的内容.split(',');
+    return 内容.replace(/[	|"'\r\n]+/g, ',')
+               .replace(/,+/g, ',')
+               .replace(/^,|,$/g, '')
+               .split(',');
 }
 
 async function sendMessage(type, ip, add_data = "") {
     if (!BotToken || !ChatID) return;
-
     try {
         let msg = "";
         const response = await fetch(`http://ip-api.com/json/${ip}?lang=zh-CN`);
@@ -1404,9 +1230,7 @@ async function sendMessage(type, ip, add_data = "") {
         } else {
             msg = `${type}\nIP: ${ip}\n<tg-spoiler>${add_data}`;
         }
-
-        const url = `https://api.telegram.org/bot${BotToken}/sendMessage?chat_id=${ChatID}&parse_mode=HTML&text=${encodeURIComponent(msg)}`;
-        return fetch(url, {
+        return fetch(`https://api.telegram.org/bot${BotToken}/sendMessage?chat_id=${ChatID}&parse_mode=HTML&text=${encodeURIComponent(msg)}`, {
             method: 'GET',
             headers: {
                 'Accept': 'text/html,application/xhtml+xml,application/xml;',
@@ -1420,11 +1244,10 @@ async function sendMessage(type, ip, add_data = "") {
 }
 
 function isValidIPv4(address) {
-    const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-    return ipv4Regex.test(address);
+    return /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(address);
 }
 
-function 生成动态UUID(密钥) {
+async function 生成动态UUID(密钥) {
     const 时区偏移 = 8;
     const 起始日期 = new Date(2007, 6, 7, 更新时间, 0, 0);
     const 一周的毫秒数 = 1000 * 60 * 60 * 24 * 有效时间;
@@ -1432,33 +1255,30 @@ function 生成动态UUID(密钥) {
     function 获取当前周数() {
         const 现在 = new Date();
         const 调整后的现在 = new Date(现在.getTime() + 时区偏移 * 60 * 60 * 1000);
-        const 时间差 = Number(调整后的现在) - Number(起始日期);
-        return Math.ceil(时间差 / 一周的毫秒数);
+        return Math.ceil((Number(调整后的现在) - Number(起始日期)) / 一周的毫秒数);
     }
 
-    function 生成UUID(基础字符串) {
-        const 哈希缓冲区 = new TextEncoder().encode(基础字符串);
-        return crypto.subtle.digest('SHA-256', 哈希缓冲区).then((哈希) => {
-            const 哈希数组 = Array.from(new Uint8Array(哈希));
-            const 十六进制哈希 = 哈希数组.map(b => b.toString(16).padStart(2, '0')).join('');
-            return `${十六进制哈希.substr(0, 8)}-${十六进制哈希.substr(8, 4)}-4${十六进制哈希.substr(13, 3)}-${(parseInt(十六进制哈希.substr(16, 2), 16) & 0x3f | 0x80).toString(16)}${十六进制哈希.substr(18, 2)}-${十六进制哈希.substr(20, 12)}`;
-        });
+    async function 生成UUID(基础字符串) {
+        const 哈希 = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(基础字符串));
+        const 十六进制哈希 = Array.from(new Uint8Array(哈希)).map(b => b.toString(16).padStart(2, '0')).join('');
+        return `${十六进制哈希.substr(0, 8)}-${十六进制哈希.substr(8, 4)}-4${十六进制哈希.substr(13, 3)}-${(parseInt(十六进制哈希.substr(16, 2), 16) & 0x3f | 0x80).toString(16)}${十六进制哈希.substr(18, 2)}-${十六进制哈希.substr(20, 12)}`;
     }
 
     const 当前周数 = 获取当前周数();
     const 结束时间 = new Date(起始日期.getTime() + 当前周数 * 一周的毫秒数);
-    const 当前UUIDPromise = 生成UUID(密钥 + 当前周数);
-    const 上一个UUIDPromise = 生成UUID(密钥 + (当前周数 - 1));
     const 到期时间UTC = new Date(结束时间.getTime() - 时区偏移 * 60 * 60 * 1000);
     const 到期时间字符串 = `到期时间(UTC): ${到期时间UTC.toISOString().slice(0, 19).replace('T', ' ')} (UTC+8): ${结束时间.toISOString().slice(0, 19).replace('T', ' ')}\n`;
 
-    return Promise.all([当前UUIDPromise, 上一个UUIDPromise, 到期时间字符串]);
+    return Promise.all([
+        生成UUID(密钥 + 当前周数),
+        生成UUID(密钥 + (当前周数 - 1)),
+        到期时间字符串
+    ]);
 }
 
 async function 迁移地址列表(env, txt = 'ADD.txt') {
     const 旧数据 = await env.KV.get(`/${txt}`);
     const 新数据 = await env.KV.get(txt);
-
     if (旧数据 && !新数据) {
         await env.KV.put(txt, 旧数据);
         await env.KV.delete(`/${txt}`);
@@ -1472,8 +1292,7 @@ async function KV(request, env, txt = 'ADD.txt') {
         if (request.method === "POST") {
             if (!env.KV) return new Response("未绑定KV空间", { status: 400 });
             try {
-                const content = await request.text();
-                await env.KV.put(txt, content);
+                await env.KV.put(txt, await request.text());
                 return new Response("保存成功");
             } catch (error) {
                 console.error('保存KV时发生错误:', error);
@@ -1481,18 +1300,7 @@ async function KV(request, env, txt = 'ADD.txt') {
             }
         }
 
-        let content = '';
-        let hasKV = !!env.KV;
-
-        if (hasKV) {
-            try {
-                content = await env.KV.get(txt) || '';
-            } catch (error) {
-                console.error('读取KV时发生错误:', error);
-                content = '读取数据时发生错误: ' + error.message;
-            }
-        }
-
+        const content = env.KV ? await env.KV.get(txt) || '' : '';
         const html = `
             <!DOCTYPE html>
             <html>
@@ -1501,64 +1309,19 @@ async function KV(request, env, txt = 'ADD.txt') {
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <style>
-                    body {
-                        margin: 0;
-                        padding: 15px;
-                        box-sizing: border-box;
-                        font-size: 13px;
-                    }
-                    .editor-container {
-                        width: 100%;
-                        max-width: 100%;
-                        margin: 0 auto;
-                    }
-                    .editor {
-                        width: 100%;
-                        height: 520px;
-                        margin: 15px 0;
-                        padding: 10px;
-                        box-sizing: border-box;
-                        border: 1px solid #ccc;
-                        border-radius: 4px;
-                        font-size: 13px;
-                        line-height: 1.5;
-                        overflow-y: auto;
-                        resize: none;
-                    }
-                    .save-container {
-                        margin-top: 8px;
-                        display: flex;
-                        align-items: center;
-                        gap: 10px;
-                    }
-                    .save-btn, .back-btn {
-                        padding: 6px 15px;
-                        color: white;
-                        border: none;
-                        border-radius: 4px;
-                        cursor: pointer;
-                    }
-                    .save-btn {
-                        background: #4CAF50;
-                    }
-                    .save-btn:hover {
-                        background: #45a049;
-                    }
-                    .back-btn {
-                        background: #666;
-                    }
-                    .back-btn:hover {
-                        background: #555;
-                    }
-                    .save-status {
-                        color: #666;
-                    }
-                    .notice-content {
-                        display: none;
-                        margin-top: 10px;
-                        font-size: 13px;
-                        color: #333;
-                    }
+                    body { margin: 0; padding: 15px; box-sizing: border-box; font-size: 13px; }
+                    .editor-container { width: 100%; max-width: 100%; margin: 0 auto; }
+                    .editor { width: 100%; height: 520px; margin: 15px 0; padding: 10px; box-sizing: border-box; 
+                             border: 1px solid #ccc; border-radius: 4px; font-size: 13px; line-height: 1.5; 
+                             overflow-y: auto; resize: none; }
+                    .save-container { margin-top: 8px; display: flex; align-items: center; gap: 10px; }
+                    .save-btn, .back-btn { padding: 6px 15px; color: white; border: none; border-radius: 4px; cursor: pointer; }
+                    .save-btn { background: #4CAF50; }
+                    .save-btn:hover { background: #45a049; }
+                    .back-btn { background: #666; }
+                    .back-btn:hover { background: #555; }
+                    .save-status { color: #666; }
+                    .notice-content { display: none; margin-top: 10px; font-size: 13px; color: #333; }
                 </style>
             </head>
             <body>
@@ -1567,10 +1330,10 @@ async function KV(request, env, txt = 'ADD.txt') {
                 ---------------------------------------------------------------<br>
                 &nbsp;&nbsp;<strong><a href="javascript:void(0);" id="noticeToggle" onclick="toggleNotice()">注意事项∨</a></strong><br>
                 <div id="noticeContent" class="notice-content">
-                    ${decodeURIComponent(atob('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'))}
+                    ${decodeURIComponent(atob('JTA5JTA5JTA5JTA5JTA5JTNDc3Ryb25nJTNFMS4lM0MlMkZzdHJvbmclM0UlMjBBRERBUEklMjAlRTUlQTYlODIlRTYlOUUlOUMlRTYlOTglQUYlRTUlOEYlOEQlRTQlQkIlQTNJUCVFRiVCQyU4QyVFNSU4RiVBRiVFNCVCRCU5QyVFNCVCOCVCQVBST1hZSVAlRTclOUElODQlRTglQUYlOUQlRUYlQkMlOEMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwcm94eWlwJTNEdHJ1ZSUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGYWRkcmVzc2VzYXBpLnR4dCUzQ3N0cm9uZyUzRSUzRnByb3h5aXAlM0R0cnVlJTNDJTJGc3Ryb25nJTNFJTNDYnIlM0UlM0NiciUzRQolMDklMDklMDklMDklMDklM0NzdHJvbmclM0UyLiUzQyUyRnN0cm9uZyUzRSUyMEFEREFQSSUyMCVFNSVBNiU4MiVFNiU5RSU5QyVFNiU5OCVBRiUyMCUzQ2ElMjBocmVmJTNEJTI3aHR0cHMlM0ElMkYlMkZnaXRodWIuY29tJTJGWElVMiUyRkNsb3VkZmxhcmVTcGVlZFRlc3QlMjclM0VDbG91ZGZsYXJlU3BlZWRUZXN0JTNDJTJGYSUzRSUyMCVFNyU5QSU4NCUyMGNzdiUyMCVFNyVCQiU5MyVFNiU5RSU5QyVFNiU5NiU4NyVFNCVCQiVCNiVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NiciUzRSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCLSUyMCVFNSVBNiU4MiVFOSU5QyU4MCVFNiU4QyU4NyVFNSVBRSU5QTIwNTMlRTclQUIlQUYlRTUlOEYlQTMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwb3J0JTNEMjA1MyUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NzdHJvbmclM0UlM0Zwb3J0JTNEMjA1MyUzQyUyRnN0cm9uZyUzRSUzQ2JyJTNFJTNDYnIlM0UKJTA5JTA5JTA5JTA5JTA5JTI2bmJzcCUzQiUyNm5ic3AlM0ItJTIwJUU1JUE2JTgyJUU5JTlDJTgwJUU2JThDJTg3JUU1JUFFJTlBJUU4JThBJTgyJUU3JTgyJUI5JUU1JUE0JTg3JUU2JUIzJUE4JUU1JThGJUFGJUU1JUIwJTg2JTIyJTNGaWQlM0RDRiVFNCVCQyU5OCVFOSU4MCU4OSUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NzdHJvbmclM0UlM0ZpZCUzRENGJUU0JUJDJTk4JUU5JTgwJTg5JTNDJTJGc3Ryb25nJTNFJTNDYnIlM0UlM0NiciUzRQolMDklMDklMDklMDklMDklMjZuYnNwJTNCJTI2bmJzcCUzQi0lMjAlRTUlQTYlODIlRTklOUMlODAlRTYlOEMlODclRTUlQUUlOUElRTUlQTQlOUElRTQlQjglQUElRTUlOEYlODIlRTYlOTUlQjAlRTUlODglOTklRTklOUMlODAlRTglQTYlODElRTQlQkQlQkYlRTclOTQlQTglMjclMjYlMjclRTUlODElOUElRTklOTclQjQlRTklOUElOTQlRUYlQkMlOEMlRTQlQkUlOEIlRTUlQTYlODIlRUYlQkMlOUElM0NiciUzRQolMDklMDklMDklMDklMDklMjZuYnNwJTNCJTI2bmJzcCUzQmh0dHBzJTNBJTJGJTJGcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSUyRmNtbGl1JTJGV29ya2VyVmxlc3Myc3ViJTJGbWFpbiUyRkNsb3VkZmxhcmVTcGVlZFRlc3QuY3N2JTNGaWQlM0RDRiVFNCVCQyU5OCVFOSU4MCU4OSUzQ3N0cm9uZyUzRSUyNiUzQyUyRnN0cm9uZyUzRXBvcnQlM0QyMDUzJTNDYnIlM0U='))}
                 </div>
                 <div class="editor-container">
-                    ${hasKV ? `
+                    ${env.KV ? `
                     <textarea class="editor" 
                         placeholder="${decodeURIComponent(atob('QUREJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCnZpc2EuY24lMjMlRTQlQkMlOTglRTklODAlODklRTUlOUYlOUYlRTUlOTAlOEQKMTI3LjAuMC4xJTNBMTIzNCUyM0NGbmF0CiU1QjI2MDYlM0E0NzAwJTNBJTNBJTVEJTNBMjA1MyUyM0lQdjYKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QQolRTYlQUYlOEYlRTglQTElOEMlRTQlQjglODAlRTQlQjglQUElRTUlOUMlQjAlRTUlOUQlODAlRUYlQkMlOEMlRTYlQTAlQkMlRTUlQkMlOEYlRTQlQjglQkElMjAlRTUlOUMlQjAlRTUlOUQlODAlM0ElRTclQUIlQUYlRTUlOEYlQTMlMjMlRTUlQTQlODclRTYlQjMlQTgKSVB2NiVFNSU5QyVCMCVFNSU5RCU4MCVFOSU5QyU4MCVFOCVBNiU4MSVFNyU5NCVBOCVFNCVCOCVBRCVFNiU4QiVBQyVFNSU4RiVCNyVFNiU4QiVBQyVFOCVCNSVCNyVFNiU5RCVBNSVFRiVCQyU4QyVFNSVBNiU4MiVFRiVCQyU5QSU1QjI2MDYlM0E0NzAwJTNBJTNBJTVEJTNBMjA1MwolRTclQUIlQUYlRTUlOEYlQTMlRTQlQjglOEQlRTUlODYlOTklRUYlQkMlOEMlRTklQkIlOTglRTglQUUlQTQlRTQlQjglQkElMjA0NDMlMjAlRTclQUIlQUYlRTUlOEYlQTMlRUYlQkMlOEMlRTUlQTYlODIlRUYlQkMlOUF2aXNhLmNuJTIzJUU0JUJDJTk4JUU5JTgwJTg5JUU1JTlGJTlGJUU1JTkwJThECgoKQUREQVBJJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCmh0dHBzJTNBJTJGJTJGcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSUyRmNtbGl1JTJGV29ya2VyVmxlc3Myc3ViJTJGcmVmcyUyRmhlYWRzJTJGbWFpbiUyRmFkZHJlc3Nlc2FwaS50eHQKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QUFEREFQSSVFNyU5QiVCNCVFNiU4RSVBNSVFNiVCNyVCQiVFNSU4QSVBMCVFNyU5QiVCNCVFOSU5MyVCRSVFNSU4RCVCMyVFNSU4RiVBRg=='))}"
                         id="content">${content}</textarea>
@@ -1592,43 +1355,21 @@ async function KV(request, env, txt = 'ADD.txt') {
                     const originalContent = textarea.value;
         
                     function goBack() {
-                        const currentUrl = window.location.href;
-                        const parentUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
-                        window.location.href = parentUrl;
-                    }
-        
-                    function replaceFullwidthColon() {
-                        const text = textarea.value;
-                        textarea.value = text.replace(/：/g, ':');
+                        window.location.href = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
                     }
                     
                     function saveContent(button) {
                         try {
-                            const updateButtonText = (step) => {
-                                button.textContent = \`保存中: \${step}\`;
-                            };
-                            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                            
-                            if (!isIOS) {
-                                replaceFullwidthColon();
+                            const updateButtonText = (step) => button.textContent = \`保存中: \${step}\`;
+                            if (!/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                                textarea.value = textarea.value.replace(/：/g, ':');
                             }
+                            
                             updateButtonText('开始保存');
                             button.disabled = true;
-                            const textarea = document.getElementById('content');
-                            if (!textarea) {
-                                throw new Error('找不到文本编辑区域');
-                            }
-                            updateButtonText('获取内容');
-                            let newContent;
-                            let originalContent;
-                            try {
-                                newContent = textarea.value || '';
-                                originalContent = textarea.defaultValue || '';
-                            } catch (e) {
-                                console.error('获取内容错误:', e);
-                                throw new Error('无法获取编辑内容');
-                            }
-                            updateButtonText('准备状态更新函数');
+                            const newContent = textarea.value || '';
+                            const originalContent = textarea.defaultValue || '';
+                            
                             const updateStatus = (message, isError = false) => {
                                 const statusElem = document.getElementById('saveStatus');
                                 if (statusElem) {
@@ -1636,46 +1377,37 @@ async function KV(request, env, txt = 'ADD.txt') {
                                     statusElem.style.color = isError ? 'red' : '#666';
                                 }
                             };
-                            updateButtonText('准备按钮重置函数');
+                            
                             const resetButton = () => {
                                 button.textContent = '保存';
                                 button.disabled = false;
                             };
+                            
                             if (newContent !== originalContent) {
                                 updateButtonText('发送保存请求');
                                 fetch(window.location.href, {
                                     method: 'POST',
                                     body: newContent,
-                                    headers: {
-                                        'Content-Type': 'text/plain;charset=UTF-8'
-                                    },
+                                    headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
                                     cache: 'no-cache'
                                 })
                                 .then(response => {
-                                    updateButtonText('检查响应状态');
-                                    if (!response.ok) {
-                                        throw new Error(\`HTTP error! status: \${response.status}\`);
-                                    }
-                                    updateButtonText('更新保存状态');
-                                    const now = new Date().toLocaleString();
-                                    document.title = \`编辑已保存 \${now}\`;
-                                    updateStatus(\`已保存 \${now}\`);
+                                    if (!response.ok) throw new Error(\`HTTP error! status: \${response.status}\`);
+                                    updateStatus(\`已保存 \${new Date().toLocaleString()}\`);
+                                    document.title = \`编辑已保存 \${new Date().toLocaleString()}\`;
                                 })
                                 .catch(error => {
-                                    updateButtonText('处理错误');
                                     console.error('Save error:', error);
                                     updateStatus(\`保存失败: \${error.message}\`, true);
                                 })
-                                .finally(() => {
-                                    resetButton();
-                                });
+                                .finally(resetButton);
                             } else {
-                                updateButtonText('检查内容变化');
                                 updateStatus('内容未变化');
                                 resetButton();
                             }
                         } catch (error) {
                             console.error('保存过程出错:', error);
+                            const button = document.querySelector('.save-btn');
                             button.textContent = '保存';
                             button.disabled = false;
                             const statusElem = document.getElementById('saveStatus');
@@ -1739,18 +1471,12 @@ async function resolveToIPv6(target) {
     }
 
     async function fetchIPv4(domain) {
-        const url = `https://cloudflare-dns.com/dns-query?name=${domain}&type=A`;
-        const response = await fetch(url, {
+        const response = await fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=A`, {
             headers: { 'Accept': 'application/dns-json' }
         });
-
         if (!response.ok) throw new Error('DNS查询失败');
-
         const data = await response.json();
-        const ipv4s = (data.Answer || [])
-            .filter(record => record.type === 1)
-            .map(record => record.data);
-
+        const ipv4s = (data.Answer || []).filter(r => r.type === 1).map(r => r.data);
         if (ipv4s.length === 0) throw new Error('未找到IPv4地址');
         return ipv4s[Math.floor(Math.random() * ipv4s.length)];
     }
@@ -1760,7 +1486,6 @@ async function resolveToIPv6(target) {
             secureTransport: 'on',
             allowHalfOpen: false
         });
-
         const writer = socket.writable.getWriter();
         const reader = socket.readable.getReader();
 
@@ -1771,11 +1496,7 @@ async function resolveToIPv6(target) {
             queryWithLength[1] = query.length & 0xFF;
             queryWithLength.set(query, 2);
             await writer.write(queryWithLength);
-
-            const response = await readDNSResponse(reader);
-            const ipv6s = parseIPv6(response);
-
-            return ipv6s.length > 0 ? ipv6s[0] : '未找到IPv6地址';
+            return parseIPv6(await readDNSResponse(reader))[0] || '未找到IPv6地址';
         } finally {
             await writer.close();
             await reader.cancel();
@@ -1792,14 +1513,13 @@ async function resolveToIPv6(target) {
         view.setUint16(offset, 1); offset += 2;
         view.setUint16(offset, 0); offset += 6;
 
-        for (const label of domain.split('.')) {
+        domain.split('.').forEach(label => {
             view.setUint8(offset++, label.length);
             for (let i = 0; i < label.length; i++) {
                 view.setUint8(offset++, label.charCodeAt(i));
             }
-        }
+        });
         view.setUint8(offset++, 0);
-
         view.setUint16(offset, 28); offset += 2;
         view.setUint16(offset, 1); offset += 2;
 
@@ -1814,48 +1534,35 @@ async function resolveToIPv6(target) {
         while (true) {
             const { value, done } = await reader.read();
             if (done) break;
-
             chunks.push(value);
             totalLength += value.length;
-
             if (expectedLength === null && totalLength >= 2) {
                 expectedLength = (chunks[0][0] << 8) | chunks[0][1];
             }
-
-            if (expectedLength !== null && totalLength >= expectedLength + 2) {
-                break;
-            }
+            if (expectedLength !== null && totalLength >= expectedLength + 2) break;
         }
 
         const fullResponse = new Uint8Array(totalLength);
         let offset = 0;
-        for (const chunk of chunks) {
+        chunks.forEach(chunk => {
             fullResponse.set(chunk, offset);
             offset += chunk.length;
-        }
-
+        });
         return fullResponse.slice(2);
     }
 
     function parseIPv6(response) {
         const view = new DataView(response.buffer);
         let offset = 12;
-
-        while (view.getUint8(offset) !== 0) {
-            offset += view.getUint8(offset) + 1;
-        }
+        while (view.getUint8(offset) !== 0) offset += view.getUint8(offset) + 1;
         offset += 5;
 
         const answers = [];
         const answerCount = view.getUint16(6);
-
         for (let i = 0; i < answerCount; i++) {
-            if ((view.getUint8(offset) & 0xC0) === 0xC0) {
-                offset += 2;
-            } else {
-                while (view.getUint8(offset) !== 0) {
-                    offset += view.getUint8(offset) + 1;
-                }
+            if ((view.getUint8(offset) & 0xC0) === 0xC0) offset += 2;
+            else {
+                while (view.getUint8(offset) !== 0) offset += view.getUint8(offset) + 1;
                 offset++;
             }
 
@@ -1865,33 +1572,20 @@ async function resolveToIPv6(target) {
 
             if (type === 28 && dataLength === 16) {
                 const parts = [];
-                for (let j = 0; j < 8; j++) {
-                    parts.push(view.getUint16(offset + j * 2).toString(16));
-                }
+                for (let j = 0; j < 8; j++) parts.push(view.getUint16(offset + j * 2).toString(16));
                 answers.push(parts.join(':'));
             }
             offset += dataLength;
         }
-
         return answers;
     }
 
     try {
-        if (isIPv6(target)) {
-            return target;
-        }
-
-        let domain;
-        if (isIPv4(target)) {
-            domain = target + atob('LmlwLjA5MDIyNy54eXo=');
-        } else {
-            const ipv4 = await fetchIPv4(target);
-            domain = ipv4 + atob('LmlwLjA5MDIyNy54eXo=');
-        }
-
+        if (isIPv6(target)) return target;
+        let domain = isIPv4(target) ? target + atob('LmlwLjA5MDIyNy54eXo=') : await fetchIPv4(target) + atob('LmlwLjA5MDIyNy54eXo=');
         return await queryNAT64(domain);
     } catch (error) {
         console.error('解析错误:', error);
         return `解析失败: ${error.message}`;
     }
-									 }
+	    }
