@@ -1267,6 +1267,7 @@ async function KV(request, env, txt = 'ADD.txt') {
                 return new Response("保存失败: "+error.message, {status: 500});
             }
         }
+
         let content = '';
         let hasKV = !!env.KV;
         if (hasKV) {
@@ -1277,427 +1278,191 @@ async function KV(request, env, txt = 'ADD.txt') {
                 content = '读取数据时发生错误: '+error.message;
             }
         }
-        		const html = `
-			<!DOCTYPE html>
-			<html>
-			<head>
-				<title>优选订阅列表</title>
-				<meta charset="utf-8">
-				<meta name="viewport" content="width=device-width, initial-scale=1">
-				<style>
-					body {
-						margin: 0;
-						padding: 15px; /* 调整padding */
-						box-sizing: border-box;
-						font-size: 13px; /* 设置全局字体大小 */
-					}
-					.editor-container {
-						width: 100%;
-						max-width: 100%;
-						margin: 0 auto;
-					}
-					.editor {
-						width: 100%;
-						height: 520px; /* 调整高度 */
-						margin: 15px 0; /* 调整margin */
-						padding: 10px; /* 调整padding */
-						box-sizing: border-box;
-						border: 1px solid #ccc;
-						border-radius: 4px;
-						font-size: 13px;
-						line-height: 1.5;
-						overflow-y: auto;
-						resize: none;
-					}
-					.save-container {
-						margin-top: 8px; /* 调整margin */
-						display: flex;
-						align-items: center;
-						gap: 10px; /* 调整gap */
-					}
-					.save-btn, .back-btn {
-						padding: 6px 15px; /* 调整padding */
-						color: white;
-						border: none;
-						border-radius: 4px;
-						cursor: pointer;
-					}
-					.save-btn {
-						background: #4CAF50;
-					}
-					.save-btn:hover {
-						background: #45a049;
-					}
-					.back-btn {
-						background: #666;
-					}
-					.back-btn:hover {
-						background: #555;
-					}
-					.save-status {
-						color: #666;
-					}
-					.notice-content {
-						display: none;
-						margin-top: 10px;
-						font-size: 13px;
-						color: #333;
-					}
-				</style>
-			</head>
-			<body>
-				################################################################<br>
-				${FileName} 优选订阅列表:<br>
-				---------------------------------------------------------------<br>
-				&nbsp;&nbsp;<strong><a href="javascript:void(0);" id="noticeToggle" onclick="toggleNotice()">注意事项∨</a></strong><br>
-				<div id="noticeContent" class="notice-content">
-					${decodeURIComponent(atob('JTA5JTA5JTA5JTA5JTA5JTNDc3Ryb25nJTNFMS4lM0MlMkZzdHJvbmclM0UlMjBBRERBUEklMjAlRTUlQTYlODIlRTYlOUUlOUMlRTYlOTglQUYlRTUlOEYlOEQlRTQlQkIlQTNJUCVFRiVCQyU4QyVFNSU4RiVBRiVFNCVCRCU5QyVFNCVCOCVCQVBST1hZSVAlRTclOUElODQlRTglQUYlOUQlRUYlQkMlOEMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwcm94eWlwJTNEdHJ1ZSUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGYWRkcmVzc2VzYXBpLnR4dCUzQ3N0cm9uZyUzRSUzRnByb3h5aXAlM0R0cnVlJTNDJTJGc3Ryb25nJTNFJTNDYnIlM0UlM0NiciUzRQolMDklMDklMDklMDklMDklM0NzdHJvbmclM0UyLiUzQyUyRnN0cm9uZyUzRSUyMEFEREFQSSUyMCVFNSVBNiU4MiVFNiU5RSU5QyVFNiU5OCVBRiUyMCUzQ2ElMjBocmVmJTNEJTI3aHR0cHMlM0ElMkYlMkZnaXRodWIuY29tJTJGWElVMiUyRkNsb3VkZmxhcmVTcGVlZFRlc3QlMjclM0VDbG91ZGZsYXJlU3BlZWRUZXN0JTNDJTJGYSUzRSUyMCVFNyU5QSU4NCUyMGNzdiUyMCVFNyVCQiU5MyVFNiU5RSU5QyVFNiU5NiU4NyVFNCVCQiVCNiVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NiciUzRSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCLSUyMCVFNSVBNiU4MiVFOSU5QyU4MCVFNiU4QyU4NyVFNSVBRSU5QTIwNTMlRTclQUIlQUYlRTUlOEYlQTMlRTUlOEYlQUYlRTUlQjAlODYlMjIlM0Zwb3J0JTNEMjA1MyUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NzdHJvbmclM0UlM0Zwb3J0JTNEMjA1MyUzQyUyRnN0cm9uZyUzRSUzQ2JyJTNFJTNDYnIlM0UKJTA5JTA5JTA5JTA5JTA5JTI2bmJzcCUzQiUyNm5ic3AlM0ItJTIwJUU1JUE2JTgyJUU5JTlDJTgwJUU2JThDJTg3JUU1JUFFJTlBJUU4JThBJTgyJUU3JTgyJUI5JUU1JUE0JTg3JUU2JUIzJUE4JUU1JThGJUFGJUU1JUIwJTg2JTIyJTNGaWQlM0RDRiVFNCVCQyU5OCVFOSU4MCU4OSUyMiVFNSU4RiU4MiVFNiU5NSVCMCVFNiVCNyVCQiVFNSU4QSVBMCVFNSU4OCVCMCVFOSU5MyVCRSVFNiU4RSVBNSVFNiU5QyVBQiVFNSVCMCVCRSVFRiVCQyU4QyVFNCVCRSU4QiVFNSVBNiU4MiVFRiVCQyU5QSUzQ2JyJTNFCiUwOSUwOSUwOSUwOSUwOSUyNm5ic3AlM0IlMjZuYnNwJTNCaHR0cHMlM0ElMkYlMkZyYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tJTJGY21saXUlMkZXb3JrZXJWbGVzczJzdWIlMkZtYWluJTJGQ2xvdWRmbGFyZVNwZWVkVGVzdC5jc3YlM0NzdHJvbmclM0UlM0ZpZCUzRENGJUU0JUJDJTk4JUU5JTgwJTg5JTNDJTJGc3Ryb25nJTNFJTNDYnIlM0UlM0NiciUzRQolMDklMDklMDklMDklMDklMjZuYnNwJTNCJTI2bmJzcCUzQi0lMjAlRTUlQTYlODIlRTklOUMlODAlRTYlOEMlODclRTUlQUUlOUElRTUlQTQlOUElRTQlQjglQUElRTUlOEYlODIlRTYlOTUlQjAlRTUlODglOTklRTklOUMlODAlRTglQTYlODElRTQlQkQlQkYlRTclOTQlQTglMjclMjYlMjclRTUlODElOUElRTklOTclQjQlRTklOUElOTQlRUYlQkMlOEMlRTQlQkUlOEIlRTUlQTYlODIlRUYlQkMlOUElM0NiciUzRQolMDklMDklMDklMDklMDklMjZuYnNwJTNCJTI2bmJzcCUzQmh0dHBzJTNBJTJGJTJGcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSUyRmNtbGl1JTJGV29ya2VyVmxlc3Myc3ViJTJGbWFpbiUyRkNsb3VkZmxhcmVTcGVlZFRlc3QuY3N2JTNGaWQlM0RDRiVFNCVCQyU5OCVFOSU4MCU4OSUzQ3N0cm9uZyUzRSUyNiUzQyUyRnN0cm9uZyUzRXBvcnQlM0QyMDUzJTNDYnIlM0U='))}
-				</div>
-				<div class="editor-container">
-					${hasKV ? `
-					<textarea class="editor" 
-						placeholder="${decodeURIComponent(atob('QUREJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCnZpc2EuY24lMjMlRTQlQkMlOTglRTklODAlODklRTUlOUYlOUYlRTUlOTAlOEQKMTI3LjAuMC4xJTNBMTIzNCUyM0NGbmF0CiU1QjI2MDYlM0E0NzAwJTNBJTNBJTVEJTNBMjA1MyUyM0lQdjYKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QQolRTYlQUYlOEYlRTglQTElOEMlRTQlQjglODAlRTQlQjglQUElRTUlOUMlQjAlRTUlOUQlODAlRUYlQkMlOEMlRTYlQTAlQkMlRTUlQkMlOEYlRTQlQjglQkElMjAlRTUlOUMlQjAlRTUlOUQlODAlM0ElRTclQUIlQUYlRTUlOEYlQTMlMjMlRTUlQTQlODclRTYlQjMlQTgKSVB2NiVFNSU5QyVCMCVFNSU5RCU4MCVFOSU5QyU4MCVFOCVBNiU4MSVFNyU5NCVBOCVFNCVCOCVBRCVFNiU4QiVBQyVFNSU4RiVCNyVFNiU4QiVBQyVFOCVCNSVCNyVFNiU5RCVBNSVFRiVCQyU4QyVFNSVBNiU4MiVFRiVCQyU5QSU1QjI2MDYlM0E0NzAwJTNBJTNBJTVEJTNBMjA1MwolRTclQUIlQUYlRTUlOEYlQTMlRTQlQjglOEQlRTUlODYlOTklRUYlQkMlOEMlRTklQkIlOTglRTglQUUlQTQlRTQlQjglQkElMjA0NDMlMjAlRTclQUIlQUYlRTUlOEYlQTMlRUYlQkMlOEMlRTUlQTYlODIlRUYlQkMlOUF2aXNhLmNuJTIzJUU0JUJDJTk4JUU5JTgwJTg5JUU1JTlGJTlGJUU1JTkwJThECgoKQUREQVBJJUU3JUE0JUJBJUU0JUJFJThCJUVGJUJDJTlBCmh0dHBzJTNBJTJGJTJGcmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSUyRmNtbGl1JTJGV29ya2VyVmxlc3Myc3ViJTJGcmVmcyUyRmhlYWRzJTJGbWFpbiUyRmFkZHJlc3Nlc2FwaS50eHQKCiVFNiVCMyVBOCVFNiU4NCU4RiVFRiVCQyU5QUFEREFQSSVFNyU5QiVCNCVFNiU4RSVBNSVFNiVCNyVCQiVFNSU4QSVBMCVFNyU5QiVCNCVFOSU5MyVCRSVFNSU4RCVCMyVFNSU4RiVBRg=='))}"
-						id="content">${content}</textarea>
-					<div class="save-container">
-						<button class="back-btn" onclick="goBack()">返回配置页</button>
-						<button class="save-btn" onclick="saveContent(this)">保存</button>
-						<span class="save-status" id="saveStatus"></span>
-					</div>
-					<br>
-					################################################################<br>
-					${cmad}
-					` : '<p>未绑定KV空间</p>'}
-				</div>
-		
-				<script>
-				if (document.querySelector('.editor')) {
-					let timer;
-					const textarea = document.getElementById('content');
-					const originalContent = textarea.value;
-		
-					function goBack() {
-						const currentUrl = window.location.href;
-						const parentUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
-						window.location.href = parentUrl;
-					}
-		
-					function replaceFullwidthColon() {
-						const text = textarea.value;
-						textarea.value = text.replace(/：/g, ':');
-					}
-					
-					function saveContent(button) {
-						try {
-							const updateButtonText = (step) => {
-								button.textContent = \`保存中: \${step}\`;
-							};
-							// 检测是否为iOS设备
-							const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-							
-							// 仅在非iOS设备上执行replaceFullwidthColon
-							if (!isIOS) {
-								replaceFullwidthColon();
-							}
-							updateButtonText('开始保存');
-							button.disabled = true;
-							// 获取textarea内容和原始内容
-							const textarea = document.getElementById('content');
-							if (!textarea) {
-								throw new Error('找不到文本编辑区域');
-							}
-							updateButtonText('获取内容');
-							let newContent;
-							let originalContent;
-							try {
-								newContent = textarea.value || '';
-								originalContent = textarea.defaultValue || '';
-							} catch (e) {
-								console.error('获取内容错误:', e);
-								throw new Error('无法获取编辑内容');
-							}
-							updateButtonText('准备状态更新函数');
-							const updateStatus = (message, isError = false) => {
-								const statusElem = document.getElementById('saveStatus');
-								if (statusElem) {
-									statusElem.textContent = message;
-									statusElem.style.color = isError ? 'red' : '#666';
-								}
-							};
-							updateButtonText('准备按钮重置函数');
-							const resetButton = () => {
-								button.textContent = '保存';
-								button.disabled = false;
-							};
-							if (newContent !== originalContent) {
-								updateButtonText('发送保存请求');
-								fetch(window.location.href, {
-									method: 'POST',
-									body: newContent,
-									headers: {
-										'Content-Type': 'text/plain;charset=UTF-8'
-									},
-									cache: 'no-cache'
-								})
-								.then(response => {
-									updateButtonText('检查响应状态');
-									if (!response.ok) {
-										throw new Error(\`HTTP error! status: \${response.status}\`);
-									}
-									updateButtonText('更新保存状态');
-									const now = new Date().toLocaleString();
-									document.title = \`编辑已保存 \${now}\`;
-									updateStatus(\`已保存 \${now}\`);
-								})
-								.catch(error => {
-									updateButtonText('处理错误');
-									console.error('Save error:', error);
-									updateStatus(\`保存失败: \${error.message}\`, true);
-								})
-								.finally(() => {
-									resetButton();
-								});
-							} else {
-								updateButtonText('检查内容变化');
-								updateStatus('内容未变化');
-								resetButton();
-							}
-						} catch (error) {
-							console.error('保存过程出错:', error);
-							button.textContent = '保存';
-							button.disabled = false;
-							const statusElem = document.getElementById('saveStatus');
-							if (statusElem) {
-								statusElem.textContent = \`错误: \${error.message}\`;
-								statusElem.style.color = 'red';
-							}
-						}
-					}
-		
-					textarea.addEventListener('blur', saveContent);
-					textarea.addEventListener('input', () => {
-						clearTimeout(timer);
-						timer = setTimeout(saveContent, 5000);
-					});
-				}
-		
-				function toggleNotice() {
-					const noticeContent = document.getElementById('noticeContent');
-					const noticeToggle = document.getElementById('noticeToggle');
-					if (noticeContent.style.display === 'none' || noticeContent.style.display === '') {
-						noticeContent.style.display = 'block';
-						noticeToggle.textContent = '注意事项∧';
-					} else {
-						noticeContent.style.display = 'none';
-						noticeToggle.textContent = '注意事项∨';
-					}
-				}
-		
-				// 初始化 noticeContent 的 display 属性
-				document.addEventListener('DOMContentLoaded', () => {
-					document.getElementById('noticeContent').style.display = 'none';
-				});
-				</script>
-			</body>
-			</html>
-		`;
 
-		return new Response(html, {
-			headers: { "Content-Type": "text/html;charset=utf-8" }
-		});
-	} catch (error) {
-		console.error('处理请求时发生错误:', error);
-		return new Response("服务器错误: " + error.message, {
-			status: 500,
-			headers: { "Content-Type": "text/plain;charset=utf-8" }
-		});
-	}
-}
+        // 修复后的HTML模板 - 确保所有括号和引号正确闭合
+        const html = `<!DOCTYPE html>
+        <html>
+        <head>
+            <title>优选订阅列表</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+                body { margin:0; padding:15px; box-sizing:border-box; font-size:13px }
+                .editor-container { width:100%; max-width:100%; margin:0 auto }
+                .editor { width:100%; height:520px; margin:15px 0; padding:10px; 
+                         box-sizing:border-box; border:1px solid #ccc; border-radius:4px;
+                         font-size:13px; line-height:1.5; overflow-y:auto; resize:none }
+                .save-container { margin-top:8px; display:flex; align-items:center; gap:10px }
+                .save-btn, .back-btn { padding:6px 15px; color:white; border:none; 
+                                      border-radius:4px; cursor:pointer }
+                .save-btn { background:#4CAF50 }
+                .save-btn:hover { background:#45a049 }
+                .back-btn { background:#666 }
+                .back-btn:hover { background:#555 }
+                .save-status { color:#666 }
+                .notice-content { display:none; margin-top:10px; font-size:13px; color:#333 }
+            </style>
+        </head>
+        <body>
+            ################################################################<br>
+            ${FileName} 优选订阅列表:<br>
+            ---------------------------------------------------------------<br>
+            &nbsp;&nbsp;<strong><a href="javascript:void(0);" id="noticeToggle" onclick="toggleNotice()">注意事项∨</a></strong><br>
+            <div id="noticeContent" class="notice-content" style="display: none;">
+                ${decodeURIComponent(atob('...'))}
+            </div>
+            <div class="editor-container">
+                ${hasKV ? `
+                <textarea class="editor" 
+                    placeholder="${decodeURIComponent(atob('...'))}"
+                    id="content">${content}</textarea>
+                <div class="save-container">
+                    <button class="back-btn" onclick="goBack()">返回配置页</button>
+                    <button class="save-btn" onclick="saveContent(this)">保存</button>
+                    <span class="save-status" id="saveStatus"></span>
+                </div>
+                <br>
+                ################################################################<br>
+                ${cmad}
+                ` : '<p>未绑定KV空间</p>'}
+            </div>
 
-async function resolveToIPv6(target) {
-	// 检查是否为IPv4
-	function isIPv4(str) {
-		const parts = str.split('.');
-		return parts.length === 4 && parts.every(part => {
-			const num = parseInt(part, 10);
-			return num >= 0 && num <= 255 && part === num.toString();
-		});
-	}
+            <script>
+                if(document.querySelector('.editor')) {
+                    let timer;
+                    const textarea = document.getElementById('content');
+                    const originalContent = textarea.value;
 
-	// 检查是否为IPv6
-	function isIPv6(str) {
-		return str.includes(':') && /^[0-9a-fA-F:]+$/.test(str);
-	}
+                    function goBack() {
+                        const currentUrl = window.location.href;
+                        const parentUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/'));
+                        window.location.href = parentUrl;
+                    }
 
-	// 获取域名的IPv4地址
-	async function fetchIPv4(domain) {
-		const url = `https://cloudflare-dns.com/dns-query?name=${domain}&type=A`;
-		const response = await fetch(url, {
-			headers: { 'Accept': 'application/dns-json' }
-		});
+                    function replaceFullwidthColon() {
+                        const text = textarea.value;
+                        textarea.value = text.replace(/：/g, ':');
+                    }
 
-		if (!response.ok) throw new Error('DNS查询失败');
+                    function saveContent(button) {
+                        try {
+                            const updateButtonText = (step) => {
+                                button.textContent = \`保存中: \${step}\`;
+                            };
+                            
+                            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                            if(!isIOS) {
+                                replaceFullwidthColon();
+                            }
+                            
+                            updateButtonText('开始保存');
+                            button.disabled = true;
+                            
+                            const textarea = document.getElementById('content');
+                            if(!textarea) {
+                                throw new Error('找不到文本编辑区域');
+                            }
+                            
+                            updateButtonText('获取内容');
+                            let newContent;
+                            let originalContent;
+                            try {
+                                newContent = textarea.value || '';
+                                originalContent = textarea.defaultValue || '';
+                            } catch(e) {
+                                console.error('获取内容错误:', e);
+                                throw new Error('无法获取编辑内容');
+                            }
+                            
+                            updateButtonText('准备状态更新函数');
+                            const updateStatus = (message, isError = false) => {
+                                const statusElem = document.getElementById('saveStatus');
+                                if(statusElem) {
+                                    statusElem.textContent = message;
+                                    statusElem.style.color = isError ? 'red' : '#666';
+                                }
+                            };
+                            
+                            updateButtonText('准备按钮重置函数');
+                            const resetButton = () => {
+                                button.textContent = '保存';
+                                button.disabled = false;
+                            };
+                            
+                            if(newContent !== originalContent) {
+                                updateButtonText('发送保存请求');
+                                fetch(window.location.href, {
+                                    method: 'POST',
+                                    body: newContent,
+                                    headers: {
+                                        'Content-Type': 'text/plain;charset=UTF-8'
+                                    },
+                                    cache: 'no-cache'
+                                })
+                                .then(response => {
+                                    updateButtonText('检查响应状态');
+                                    if(!response.ok) {
+                                        throw new Error(\`HTTP error! status: \${response.status}\`);
+                                    }
+                                    updateButtonText('更新保存状态');
+                                    const now = new Date().toLocaleString();
+                                    document.title = \`编辑已保存 \${now}\`;
+                                    updateStatus(\`已保存 \${now}\`);
+                                })
+                                .catch(error => {
+                                    updateButtonText('处理错误');
+                                    console.error('Save error:', error);
+                                    updateStatus(\`保存失败: \${error.message}\`, true);
+                                })
+                                .finally(() => {
+                                    resetButton();
+                                });
+                            } else {
+                                updateButtonText('检查内容变化');
+                                updateStatus('内容未变化');
+                                resetButton();
+                            }
+                        } catch(error) {
+                            console.error('保存过程出错:', error);
+                            button.textContent = '保存';
+                            button.disabled = false;
+                            const statusElem = document.getElementById('saveStatus');
+                            if(statusElem) {
+                                statusElem.textContent = \`错误: \${error.message}\`;
+                                statusElem.style.color = 'red';
+                            }
+                        }
+                    }
 
-		const data = await response.json();
-		const ipv4s = (data.Answer || [])
-			.filter(record => record.type === 1)
-			.map(record => record.data);
+                    textarea.addEventListener('blur', saveContent);
+                    textarea.addEventListener('input', () => {
+                        clearTimeout(timer);
+                        timer = setTimeout(saveContent, 5000);
+                    });
+                }
 
-		if (ipv4s.length === 0) throw new Error('未找到IPv4地址');
-		return ipv4s[Math.floor(Math.random() * ipv4s.length)];
-	}
+                function toggleNotice() {
+                    const noticeContent = document.getElementById('noticeContent');
+                    const noticeToggle = document.getElementById('noticeToggle');
+                    if(noticeContent.style.display === 'none' || noticeContent.style.display === '') {
+                        noticeContent.style.display = 'block';
+                        noticeToggle.textContent = '注意事项∧';
+                    } else {
+                        noticeContent.style.display = 'none';
+                        noticeToggle.textContent = '注意事项∨';
+                    }
+                }
 
-	// 查询NAT64 IPv6地址
-	async function queryNAT64(domain) {
-		const socket = connect(atob('ZG90Lm5hdDY0LmRrOjg1Mw=='), {
-			secureTransport: 'on',
-			allowHalfOpen: false
-		});
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.getElementById('noticeContent').style.display = 'none';
+                });
+            </script>
+        </body>
+        </html>`;
 
-		const writer = socket.writable.getWriter();
-		const reader = socket.readable.getReader();
-
-		try {
-			// 发送DNS查询
-			const query = buildDNSQuery(domain);
-			const queryWithLength = new Uint8Array(query.length + 2);
-			queryWithLength[0] = query.length >> 8;
-			queryWithLength[1] = query.length & 0xFF;
-			queryWithLength.set(query, 2);
-			await writer.write(queryWithLength);
-
-			// 读取响应
-			const response = await readDNSResponse(reader);
-			const ipv6s = parseIPv6(response);
-
-			return ipv6s.length > 0 ? ipv6s[0] : '未找到IPv6地址';
-		} finally {
-			await writer.close();
-			await reader.cancel();
-		}
-	}
-
-	// 构建DNS查询包
-	function buildDNSQuery(domain) {
-		const buffer = new ArrayBuffer(512);
-		const view = new DataView(buffer);
-		let offset = 0;
-
-		// DNS头部
-		view.setUint16(offset, Math.floor(Math.random() * 65536)); offset += 2; // ID
-		view.setUint16(offset, 0x0100); offset += 2; // 标志
-		view.setUint16(offset, 1); offset += 2; // 问题数
-		view.setUint16(offset, 0); offset += 6; // 答案数/权威数/附加数
-
-		// 域名编码
-		for (const label of domain.split('.')) {
-			view.setUint8(offset++, label.length);
-			for (let i = 0; i < label.length; i++) {
-				view.setUint8(offset++, label.charCodeAt(i));
-			}
-		}
-		view.setUint8(offset++, 0); // 结束标记
-
-		// 查询类型和类
-		view.setUint16(offset, 28); offset += 2; // AAAA记录
-		view.setUint16(offset, 1); offset += 2; // IN类
-
-		return new Uint8Array(buffer, 0, offset);
-	}
-
-	// 读取DNS响应
-	async function readDNSResponse(reader) {
-		const chunks = [];
-		let totalLength = 0;
-		let expectedLength = null;
-
-		while (true) {
-			const { value, done } = await reader.read();
-			if (done) break;
-
-			chunks.push(value);
-			totalLength += value.length;
-
-			if (expectedLength === null && totalLength >= 2) {
-				expectedLength = (chunks[0][0] << 8) | chunks[0][1];
-			}
-
-			if (expectedLength !== null && totalLength >= expectedLength + 2) {
-				break;
-			}
-		}
-
-		// 合并数据并跳过长度前缀
-		const fullResponse = new Uint8Array(totalLength);
-		let offset = 0;
-		for (const chunk of chunks) {
-			fullResponse.set(chunk, offset);
-			offset += chunk.length;
-		}
-
-		return fullResponse.slice(2);
-	}
-
-	// 解析IPv6地址
-	function parseIPv6(response) {
-		const view = new DataView(response.buffer);
-		let offset = 12; // 跳过DNS头部
-
-		// 跳过问题部分
-		while (view.getUint8(offset) !== 0) {
-			offset += view.getUint8(offset) + 1;
-		}
-		offset += 5;
-
-		const answers = [];
-		const answerCount = view.getUint16(6); // 答案数量
-
-		for (let i = 0; i < answerCount; i++) {
-			// 跳过名称
-			if ((view.getUint8(offset) & 0xC0) === 0xC0) {
-				offset += 2;
-			} else {
-				while (view.getUint8(offset) !== 0) {
-					offset += view.getUint8(offset) + 1;
-				}
-				offset++;
-			}
-
-			const type = view.getUint16(offset); offset += 2;
-			offset += 6; // 跳过类和TTL
-			const dataLength = view.getUint16(offset); offset += 2;
-
-			if (type === 28 && dataLength === 16) { // AAAA记录
-				const parts = [];
-				for (let j = 0; j < 8; j++) {
-					parts.push(view.getUint16(offset + j * 2).toString(16));
-				}
-				answers.push(parts.join(':'));
-			}
-			offset += dataLength;
-		}
-
-		return answers;
-	}
-
-	try {
-		// 判断输入类型并处理
-		if (isIPv6(target)) {
-			return target; // IPv6直接返回
-		}
-
-		let domain;
-		if (isIPv4(target)) {
-			domain = target + atob('LmlwLjA5MDIyNy54eXo='); // IPv4转换为NAT64域名
-		} else {
-			// 域名先解析IPv4再转NAT64
-			const ipv4 = await fetchIPv4(target);
-			domain = ipv4 + atob('LmlwLjA5MDIyNy54eXo=');
-		}
-
-		return await queryNAT64(domain);
-	} catch (error) {
-		console.error('解析错误:', error);
-		return `解析失败: ${error.message}`;
-	}
-                                              }
-                                             }
+        return new Response(html, {headers: {"Content-Type": "text/html;charset=utf-8"}});
+    } catch (error) {
+        console.error('处理请求时发生错误:', error);
+        return new Response("服务器错误: "+error.message, {status: 500, headers: {"Content-Type": "text/plain;charset=utf-8"}});
+    }
+		    }
