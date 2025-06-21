@@ -1,3 +1,4 @@
+
 import { connect } from 'cloudflare:sockets';
 
 const CONFIG = {
@@ -37,7 +38,6 @@ const CONFIG = {
 class ConnectionPool {
   constructor() {
     this.pool = new Map();
-    this.cleanupInterval = setInterval(() => this.cleanup(), 30000);
   }
 
   getKey(address, port, isSocks = false, isHttp = false) {
@@ -96,7 +96,6 @@ class ConnectionPool {
       safeCloseWebSocket(conn.socket);
     }
     this.pool.clear();
-    clearInterval(this.cleanupInterval);
   }
 }
 
@@ -138,22 +137,27 @@ class CacheManager {
   }
 }
 
-const connectionPool = new ConnectionPool();
 const cacheManager = new CacheManager();
 
 export default {
   async fetch(request, env, ctx) {
+    const connectionPool = new ConnectionPool();
+    
+    ctx.waitUntil((async () => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      connectionPool.closeAll();
+      cacheManager.clear();
+    })());
+
     try {
       const config = initConfig(env);
       const upgradeHeader = request.headers.get('Upgrade');
       if (upgradeHeader === 'websocket') {
-        return handleWebSocketUpgrade(request, config);
+        return handleWebSocketUpgrade(request, config, connectionPool);
       }
-      return handleHttpRequest(request, env, config);
+      return handleHttpRequest(request, env, config, connectionPool);
     } catch (err) {
       return new Response(err.toString());
-    } finally {
-      ctx.waitUntil(connectionPool.cleanup());
     }
   },
 };
@@ -173,7 +177,7 @@ function initConfig(env) {
   return config;
 }
 
-async function handleWebSocketUpgrade(request, config) {
+async function handleWebSocketUpgrade(request, config, connectionPool) {
   const webSocketPair = new WebSocketPair();
   const [client, webSocket] = Object.values(webSocketPair);
   webSocket.accept();
@@ -184,7 +188,7 @@ async function handleWebSocketUpgrade(request, config) {
 
   readableWebSocketStream.pipeTo(new WritableStream({
     async write(chunk) {
-      if (isDns) return handleDNSQuery(chunk, webSocket);
+      if (isDns) return handleDNSQuery(chunk, webSocket, null, () => {}, connectionPool);
       
       const headerInfo = processHeader(chunk, config.userID);
       if (headerInfo.hasError) throw new Error(headerInfo.message);
@@ -199,7 +203,8 @@ async function handleWebSocketUpgrade(request, config) {
           portRemote, 
           chunk.slice(headerInfo.rawDataIndex), 
           webSocket, 
-          config
+          config,
+          connectionPool
         );
       } else {
         throw new Error(`Blocked host: ${addressRemote}:${portRemote}`);
@@ -212,7 +217,7 @@ async function handleWebSocketUpgrade(request, config) {
   return new Response(null, { status: 101, webSocket: client });
 }
 
-async function handleTCPOutbound(remoteSocket, address, port, data, webSocket, config) {
+async function handleTCPOutbound(remoteSocket, address, port, data, webSocket, config, connectionPool) {
   try {
     const useSocks = shouldUseSocks5(address, config);
     const tcpSocket = await connectionPool.getConnection(
@@ -249,11 +254,6 @@ function safeCloseWebSocket(socket) {
     }
   } catch (error) {}
 }
-
-addEventListener('unload', () => {
-  connectionPool.closeAll();
-  cacheManager.clear();
-});
 
 let userID = '';
 let proxyIP = '';
@@ -300,7 +300,7 @@ let banHosts = [atob('c3BlZWQuY2xvdWRmbGFyZS5jb20=')];
 let SCV = 'true';
 let allowInsecure = '&allowInsecure=1';
 
-async function 维列斯OverWSHandler(request) {
+async function 维列斯OverWSHandler(request, connectionPool) {
   const webSocketPair = new WebSocketPair();
   const [client, webSocket] = Object.values(webSocketPair);
   webSocket.accept();
@@ -316,7 +316,7 @@ async function 维列斯OverWSHandler(request) {
 
   readableWebSocketStream.pipeTo(new WritableStream({
     async write(chunk, controller) {
-      if (isDns) return await handleDNSQuery(chunk, webSocket, null, log);
+      if (isDns) return await handleDNSQuery(chunk, webSocket, null, log, connectionPool);
       if (remoteSocketWapper.value) {
         const writer = remoteSocketWapper.value.writable.getWriter();
         await writer.write(chunk);
@@ -337,10 +337,10 @@ async function 维列斯OverWSHandler(request) {
       const 维列斯ResponseHeader = new Uint8Array([维列斯Version[0], 0]);
       const rawClientData = chunk.slice(rawDataIndex);
 
-      if (isDns) return handleDNSQuery(rawClientData, webSocket, 维列斯ResponseHeader, log);
+      if (isDns) return handleDNSQuery(rawClientData, webSocket, 维列斯ResponseHeader, log, connectionPool);
       if (!banHosts.includes(addressRemote)) {
         log(`处理 TCP 出站连接 ${addressRemote}:${portRemote}`);
-        handleTCPOutBound(remoteSocketWapper, addressType, addressRemote, portRemote, rawClientData, webSocket, 维列斯ResponseHeader, log);
+        handleTCPOutBound(remoteSocketWapper, addressType, addressRemote, portRemote, rawClientData, webSocket, 维列斯ResponseHeader, log, connectionPool);
       } else {
         throw new Error(`黑名单关闭 TCP 出站连接 ${addressRemote}:${portRemote}`);
       }
@@ -352,7 +352,7 @@ async function 维列斯OverWSHandler(request) {
   return new Response(null, { status: 101, webSocket: client });
 }
 
-async function handleTCPOutBound(remoteSocket, addressType, addressRemote, portRemote, rawClientData, webSocket, 维列斯ResponseHeader, log) {
+async function handleTCPOutBound(remoteSocket, addressType, addressRemote, portRemote, rawClientData, webSocket, 维列斯ResponseHeader, log, connectionPool) {
   async function useSocks5Pattern(address) {
     if (go2Socks5s.includes(atob('YWxsIGlu')) || go2Socks5s.includes(atob('Kg=='))) return true;
     return go2Socks5s.some(pattern => {
@@ -522,7 +522,7 @@ async function remoteSocketToWS(remoteSocket, webSocket, 维列斯ResponseHeader
     start() {},
     async write(chunk, controller) {
       hasIncomingData = true;
-      if (webSocket.readyState !== WS_READY_STATE_OPEN) controller.error('webSocket.readyState is not open, maybe close');
+      if (webSocket.readyState !== CONFIG.WS_READY_STATE_OPEN) controller.error('webSocket.readyState is not open, maybe close');
       
       if (维列斯Header) {
         webSocket.send(await new Blob([维列斯Header, chunk]).arrayBuffer());
@@ -582,7 +582,7 @@ function stringify(arr, offset = 0) {
   return uuid;
 }
 
-async function handleDNSQuery(udpChunk, webSocket, 维列斯ResponseHeader, log) {
+async function handleDNSQuery(udpChunk, webSocket, 维列斯ResponseHeader, log, connectionPool) {
   try {
     const dnsServer = '8.8.4.4';
     const dnsPort = 53;
@@ -596,7 +596,7 @@ async function handleDNSQuery(udpChunk, webSocket, 维列斯ResponseHeader, log)
 
     await tcpSocket.readable.pipeTo(new WritableStream({
       async write(chunk) {
-        if (webSocket.readyState === WS_READY_STATE_OPEN) {
+        if (webSocket.readyState === CONFIG.WS_READY_STATE_OPEN) {
           if (维列斯Header) {
             webSocket.send(await new Blob([维列斯Header, chunk]).arrayBuffer());
             维列斯Header = null;
@@ -615,7 +615,7 @@ async function handleDNSQuery(udpChunk, webSocket, 维列斯ResponseHeader, log)
 
 async function socks5Connect(addressType, addressRemote, portRemote, log) {
   const { username, password, hostname, port } = parsedSocks5Address;
-  const socket = await connectionPool.getConnection(hostname, port, true);
+  const socket = connect({ hostname, port });
   const socksGreeting = new Uint8Array([5, 2, 0, 2]);
   const writer = socket.writable.getWriter();
   await writer.write(socksGreeting);
@@ -686,7 +686,7 @@ async function socks5Connect(addressType, addressRemote, portRemote, log) {
 
 async function httpConnect(addressRemote, portRemote, log) {
   const { username, password, hostname, port } = parsedSocks5Address;
-  const sock = await connectionPool.getConnection(hostname, port, false, true);
+  const sock = await connect({ hostname, port });
   let connectRequest = `CONNECT ${addressRemote}:${portRemote} HTTP/1.1\r\n`;
   connectRequest += `Host: ${addressRemote}:${portRemote}\r\n`;
 
@@ -779,7 +779,7 @@ function socks5AddressParser(address) {
   if (hostname.includes(":") && !regex.test(hostname)) throw new Error('无效的 SOCKS 地址格式：IPv6 地址必须用方括号括起来，如 [2001:db8::1]');
 
   return { username, password, hostname, port };
-}
+	}
 
 function 恢复伪装信息(content, userID, hostName, fakeUserID, fakeHostName, isBase64) {
 	if (isBase64) content = atob(content);
