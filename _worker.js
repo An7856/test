@@ -435,7 +435,7 @@ function process维列斯Header(维列斯Buffer, userID) {
     }
 
     isValidUser = isUserIDValid(userID, userIDLow, 维列斯Buffer);
-    if (!isValidUser) return { hasError: true, message: `invalid user ${(new Uint8Array(维列斯Buffer.slice(1, 17))}` };
+    if (!isValidUser) return { hasError: true, message: `invalid user ${(new Uint8Array(维列斯Buffer.slice(1, 17)))}` };
 
     const optLength = new Uint8Array(维列斯Buffer.slice(17, 18))[0];
     const command = new Uint8Array(维列斯Buffer.slice(18 + optLength, 18 + optLength + 1))[0];
