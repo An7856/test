@@ -133,14 +133,10 @@ jobs:
       run: |
         if [ -f "README.md" ]; then
           CURRENT_VERSION=$(grep -oP '(?<=版本号: `)[^`]+' README.md | head -1 || echo "")
-          LAST_UPDATE_TIME=$(grep -oP '(?<=更新时间: `)[^`]+' README.md | head -1 || echo "")
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
-          echo "LAST_UPDATE_TIME=$LAST_UPDATE_TIME" >> $GITHUB_ENV
           echo "当前版本: $CURRENT_VERSION"
-          echo "最后更新时间: $LAST_UPDATE_TIME"
         else
           echo "CURRENT_VERSION=" >> $GITHUB_ENV
-          echo "LAST_UPDATE_TIME=" >> $GITHUB_ENV
           echo "没有找到README文件，首次运行"
         fi
 
@@ -248,15 +244,6 @@ jobs:
         UPDATE_MODE_URL=$(echo "${{ env.UPDATE_MODE }}" | sed 's/ /%20/g')
         RELEASE_CHANNEL_URL=$(echo "${{ env.RELEASE_CHANNEL }}" | sed 's/ /%20/g')
         DEOBFUSCATE_URL=$(echo "${{ env.DEOBFUSCATE }}" | tr '[:upper:]' '[:lower:]')
-        
-        # 确定更新时间
-        if [ "${{ steps.get-release.outputs.has_update }}" = "true" ]; then
-          UPDATE_TIME=$(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S')
-          echo "有新版本更新，更新时间: $UPDATE_TIME"
-        else
-          UPDATE_TIME="${{ env.LAST_UPDATE_TIME }}"
-          echo "无新版本，保持原更新时间: $UPDATE_TIME"
-        fi
 
         # 创建README文件
         echo "# 📦 Worker 自动更新系统" > README.md
@@ -293,9 +280,8 @@ jobs:
         echo "" >> README.md
         
         echo "## 🔍 当前状态" >> README.md
-        echo "### 🛠️ 最新更新" >> README.md
+        echo "### 🛠️ 最新版本" >> README.md
         echo "- 🏷️ **版本号**: \`${{ steps.get-release.outputs.version }}\`" >> README.md
-        echo "- 🕒 **更新时间**: \`$UPDATE_TIME\` (北京时间)" >> README.md
         echo "- ⚙️ **更新模式**: \`${{ env.UPDATE_MODE }}\`" >> README.md
         echo "- 🌿 **发布渠道**: \`${{ env.RELEASE_CHANNEL }}\`" >> README.md
         echo "- 🔧 **反混淆**: \`${{ env.DEOBFUSCATE }}\`" >> README.md
