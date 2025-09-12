@@ -133,10 +133,14 @@ jobs:
       run: |
         if [ -f "README.md" ]; then
           CURRENT_VERSION=$(grep -oP '(?<=版本号: `)[^`]+' README.md | head -1 || echo "")
+          LAST_UPDATE_TIME=$(grep -oP '(?<=更新时间: `)[^`]+' README.md | head -1 || echo "")
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+          echo "LAST_UPDATE_TIME=$LAST_UPDATE_TIME" >> $GITHUB_ENV
           echo "当前版本: $CURRENT_VERSION"
+          echo "最后更新时间: $LAST_UPDATE_TIME"
         else
           echo "CURRENT_VERSION=" >> $GITHUB_ENV
+          echo "LAST_UPDATE_TIME=" >> $GITHUB_ENV
           echo "没有找到README文件，首次运行"
         fi
 
@@ -149,6 +153,7 @@ jobs:
         import os
         import requests
         import semver
+        import sys
         
         headers = {'Authorization': f"Bearer {os.getenv('GITHUB_TOKEN')}"}
         
@@ -159,15 +164,20 @@ jobs:
             
             # 过滤发布渠道
             filtered_releases = []
+            channel = os.getenv('CHANNEL')
             for r in releases:
-                if os.getenv('CHANNEL') == 'stable' and not r['prerelease']:
+                if channel == 'stable' and not r['prerelease']:
                     filtered_releases.append(r)
-                elif os.getenv('CHANNEL') == 'prerelease' and r['prerelease']:
+                elif channel == 'prerelease' and r['prerelease']:
                     filtered_releases.append(r)
             
             if not filtered_releases:
                 print("::notice::没有可用更新")
-                exit(0)
+                # 设置输出变量
+                with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                    f.write(f"has_update=false\n")
+                    f.write(f"version=none\n")
+                sys.exit(0)
 
             # 版本排序
             def get_version(release):
@@ -184,7 +194,10 @@ jobs:
             
             if not js_asset:
                 print("::warning::未找到JS文件")
-                exit(0)
+                with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                    f.write(f"has_update=false\n")
+                    f.write(f"version=none\n")
+                sys.exit(0)
 
             # 检查是否有新版本
             current_version = os.getenv('CURRENT_VERSION', '')
@@ -206,7 +219,7 @@ jobs:
 
         except Exception as e:
             print(f"::error::获取发布失败: {str(e)}")
-            exit(1)
+            sys.exit(1)
       shell: python
 
     - name: 下载并处理代码
@@ -215,10 +228,13 @@ jobs:
         DEOBFUSCATE: ${{ env.DEOBFUSCATE }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        import requests, jsbeautifier, os
+        import requests
+        import jsbeautifier
+        import os
 
         headers = {'Authorization': f"Bearer {os.getenv('GITHUB_TOKEN')}"}
-        response = requests.get('${{ steps.get-release.outputs.asset_url }}', headers=headers)
+        asset_url = '${{ steps.get-release.outputs.asset_url }}'
+        response = requests.get(asset_url, headers=headers)
         response.raise_for_status()
         
         code = response.text
@@ -236,14 +252,18 @@ jobs:
             print("文件保存成功")
       shell: python
 
-    # 5. 文档更新
-    - name: 初始化或更新README
-      if: steps.get-release.outputs.version
+    # 5. 文档更新 - 只有在有新版本时才更新README
+    - name: 更新README文档
+      if: steps.get-release.outputs.has_update == 'true'
       run: |
         # 转换参数为URL安全格式
         UPDATE_MODE_URL=$(echo "${{ env.UPDATE_MODE }}" | sed 's/ /%20/g')
         RELEASE_CHANNEL_URL=$(echo "${{ env.RELEASE_CHANNEL }}" | sed 's/ /%20/g')
         DEOBFUSCATE_URL=$(echo "${{ env.DEOBFUSCATE }}" | tr '[:upper:]' '[:lower:]')
+        
+        # 获取当前北京时间
+        UPDATE_TIME=$(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S')
+        echo "更新README，更新时间: $UPDATE_TIME"
 
         # 创建README文件
         echo "# 📦 Worker 自动更新系统" > README.md
@@ -280,22 +300,18 @@ jobs:
         echo "" >> README.md
         
         echo "## 🔍 当前状态" >> README.md
-        echo "### 🛠️ 最新版本" >> README.md
+        echo "### 🛠️ 最新更新" >> README.md
         echo "- 🏷️ **版本号**: \`${{ steps.get-release.outputs.version }}\`" >> README.md
+        echo "- 🕒 **更新时间**: \`$UPDATE_TIME\` (北京时间)" >> README.md
         echo "- ⚙️ **更新模式**: \`${{ env.UPDATE_MODE }}\`" >> README.md
         echo "- 🌿 **发布渠道**: \`${{ env.RELEASE_CHANNEL }}\`" >> README.md
         echo "- 🔧 **反混淆**: \`${{ env.DEOBFUSCATE }}\`" >> README.md
         echo "" >> README.md
         
-        # 添加更新状态提示
-        if [ "${{ steps.get-release.outputs.has_update }}" = "true" ]; then
-          echo "> ✅ **更新状态**: 已更新到最新版本" >> README.md
-        else
-          echo "> ℹ️ **更新状态**: 当前已是最新版本，无需更新" >> README.md
-        fi
+        echo "> ✅ **更新状态**: 已更新到最新版本" >> README.md
         echo "" >> README.md
 
-    # 6. 提交变更
+    # 6. 提交变更 - 只有在有新版本时才提交
     - name: 提交更新
       if: steps.get-release.outputs.has_update == 'true'
       run: |
