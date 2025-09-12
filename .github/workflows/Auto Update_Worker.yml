@@ -128,6 +128,22 @@ jobs:
           echo "已清理旧版worker文件"
         fi
 
+    - name: 获取当前版本信息
+      id: get-current-version
+      run: |
+        if [ -f "README.md" ]; then
+          CURRENT_VERSION=$(grep -oP '(?<=版本号: `)[^`]+' README.md | head -1 || echo "")
+          LAST_UPDATE_TIME=$(grep -oP '(?<=更新时间: `)[^`]+' README.md | head -1 || echo "")
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+          echo "LAST_UPDATE_TIME=$LAST_UPDATE_TIME" >> $GITHUB_ENV
+          echo "当前版本: $CURRENT_VERSION"
+          echo "最后更新时间: $LAST_UPDATE_TIME"
+        else
+          echo "CURRENT_VERSION=" >> $GITHUB_ENV
+          echo "LAST_UPDATE_TIME=" >> $GITHUB_ENV
+          echo "没有找到README文件，首次运行"
+        fi
+
     - name: 获取发布信息
       id: get-release
       env:
@@ -174,10 +190,23 @@ jobs:
                 print("::warning::未找到JS文件")
                 exit(0)
 
-            # 设置输出
-            with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
-                f.write(f"version={latest['tag_name']}\n")
-                f.write(f"asset_url={js_asset['browser_download_url']}\n")
+            # 检查是否有新版本
+            current_version = os.getenv('CURRENT_VERSION', '')
+            new_version = latest['tag_name']
+            
+            if current_version == new_version:
+                print(f"::notice::当前已是最新版本: {new_version}")
+                # 设置标记表示没有更新
+                with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                    f.write(f"has_update=false\n")
+                    f.write(f"version={new_version}\n")
+                    f.write(f"asset_url={js_asset['browser_download_url']}\n")
+            else:
+                print(f"::notice::发现新版本: {current_version} -> {new_version}")
+                with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                    f.write(f"has_update=true\n")
+                    f.write(f"version={new_version}\n")
+                    f.write(f"asset_url={js_asset['browser_download_url']}\n")
 
         except Exception as e:
             print(f"::error::获取发布失败: {str(e)}")
@@ -185,7 +214,7 @@ jobs:
       shell: python
 
     - name: 下载并处理代码
-      if: steps.get-release.outputs.asset_url
+      if: steps.get-release.outputs.has_update == 'true'
       env:
         DEOBFUSCATE: ${{ env.DEOBFUSCATE }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -219,6 +248,15 @@ jobs:
         UPDATE_MODE_URL=$(echo "${{ env.UPDATE_MODE }}" | sed 's/ /%20/g')
         RELEASE_CHANNEL_URL=$(echo "${{ env.RELEASE_CHANNEL }}" | sed 's/ /%20/g')
         DEOBFUSCATE_URL=$(echo "${{ env.DEOBFUSCATE }}" | tr '[:upper:]' '[:lower:]')
+        
+        # 确定更新时间
+        if [ "${{ steps.get-release.outputs.has_update }}" = "true" ]; then
+          UPDATE_TIME=$(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S')
+          echo "有新版本更新，更新时间: $UPDATE_TIME"
+        else
+          UPDATE_TIME="${{ env.LAST_UPDATE_TIME }}"
+          echo "无新版本，保持原更新时间: $UPDATE_TIME"
+        fi
 
         # 创建README文件
         echo "# 📦 Worker 自动更新系统" > README.md
@@ -257,15 +295,23 @@ jobs:
         echo "## 🔍 当前状态" >> README.md
         echo "### 🛠️ 最新更新" >> README.md
         echo "- 🏷️ **版本号**: \`${{ steps.get-release.outputs.version }}\`" >> README.md
-        echo "- 🕒 **更新时间**: \`$(TZ='Asia/Shanghai' date +'%Y-%m-%d %H:%M:%S')\` (北京时间)" >> README.md
+        echo "- 🕒 **更新时间**: \`$UPDATE_TIME\` (北京时间)" >> README.md
         echo "- ⚙️ **更新模式**: \`${{ env.UPDATE_MODE }}\`" >> README.md
         echo "- 🌿 **发布渠道**: \`${{ env.RELEASE_CHANNEL }}\`" >> README.md
         echo "- 🔧 **反混淆**: \`${{ env.DEOBFUSCATE }}\`" >> README.md
         echo "" >> README.md
+        
+        # 添加更新状态提示
+        if [ "${{ steps.get-release.outputs.has_update }}" = "true" ]; then
+          echo "> ✅ **更新状态**: 已更新到最新版本" >> README.md
+        else
+          echo "> ℹ️ **更新状态**: 当前已是最新版本，无需更新" >> README.md
+        fi
+        echo "" >> README.md
 
     # 6. 提交变更
     - name: 提交更新
-      if: steps.get-release.outputs.version
+      if: steps.get-release.outputs.has_update == 'true'
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
@@ -284,3 +330,12 @@ jobs:
       with:
         path: .github/workflows/last_config.json
         key: worker-config-${{ github.repository }}
+
+    # 8. 完成通知
+    - name: 输出完成状态
+      run: |
+        if [ "${{ steps.get-release.outputs.has_update }}" = "true" ]; then
+          echo "✅ 更新完成: 已升级到版本 ${{ steps.get-release.outputs.version }}"
+        else
+          echo "ℹ️ 无更新: 当前已是最新版本 ${{ steps.get-release.outputs.version }}"
+        fi
