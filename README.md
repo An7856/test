@@ -1,6 +1,6 @@
 # 📦 Worker 自动更新系统
 
-[![版本](https://img.shields.io/badge/版本-v4.1.0-blue)]()
+[![版本](https://img.shields.io/badge/版本-v4.1.3-blue)]()
 [![模式](https://img.shields.io/badge/模式-自动-yellow)]()
 [![渠道](https://img.shields.io/badge/渠道-稳定版-green)]()
 [![反混淆](https://img.shields.io/badge/反混淆-true-red)]()
@@ -28,7 +28,7 @@
 
 ## 🔍 当前状态
 ### 🛠️ 最新版本
-- 🏷️ **版本号**: `v4.1.0`
+- 🏷️ **版本号**: `v4.1.3`
 - ⚙️ **更新模式**: `自动`
 - 🌿 **发布渠道**: `稳定版`
 - 🔧 **反混淆**: `true`
